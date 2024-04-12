@@ -70,3 +70,10 @@ unsigned long crc = 0;
   }
   return(true);
 }
+
+bool is_conf_correct(){
+  if ( ( input_tries == 0 ) || ( strlen(ssid) == 0 ) || ( strlen(passw) == 0 ) || ( strlen(host) == 0 ) || ( port == 0 ) || ( strlen(uri) == 0 ) ){
+    return(false);
+  }
+  return(true);
+}

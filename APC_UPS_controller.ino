@@ -1,6 +1,6 @@
-//#define DEBUG_SERIAL  // because just "DEBUG" defined in PZEM004Tv30.h
-//#define DEBUG_UPS
-//#define DBG_WIFI    // because "DEBUG_WIFI" defined in a WiFiClient library
+//#define DEBUG_SERIAL  // because just "DEBUG" defined in PZEM004Tv30.h ( legacy :)
+#define DEBUG_UPS
+#define DBG_WIFI    // because "DEBUG_WIFI" defined in a WiFiClient library
 
 #if defined ( DEBUG_UPS ) && not defined ( DEBUG_SERIAL )
 #define DEBUG_SERIAL
@@ -10,22 +10,28 @@
 #define DEBUG_SERIAL
 #endif
 
+#include <LiquidCrystal.h>
+
 #include <ESP8266WiFi.h>
 #include <WiFiClient.h>
 #include <ESP8266HTTPClient.h>
 
 #include <EEPROM.h>
 
-#define SCL_PIN SCL  // SCL pin of LCD. Default: D1 (ESP8266) or D22 (ESP32)
-#define SDA_PIN SDA  // SDA pin of LCD. Default: D2 (ESP8266) or D21 (ESP32)
-#define LCD_COLS 16
-#define LCD_ROWS 2
+#include <SimpleCLI.h>  // https://github.com/SpacehuhnTech/SimpleCLI
+
+#define LCD_COLS 20
+#define LCD_ROWS 4
 #define MAIN_DELAY 1000
 #define SHORT_DELAY MAIN_DELAY/10
 #define MAX_ALLOWED_INPUT 127
 
 #define UPS_SERIAL Serial
 #define CONSOLE Serial1
+
+// initialize the library by associating any needed LCD interface pin
+// with the arduino pin number it is connected to
+LiquidCrystal lcd(D1, D2, D3, D5, D6, D7);
 
 // Create CLI Object
 SimpleCLI cli;
@@ -34,6 +40,7 @@ SimpleCLI cli;
 WiFiClient client;
 
 double voltage, current, power, energy, freq, pwfactor;
+uint8_t input_tries=0;
 unsigned long upcounter=0;
 unsigned long ticks_sleep=0;
 unsigned long ticks_start=0;
@@ -44,6 +51,8 @@ uint8_t roll_cnt=0;
 char roller[] = { '-', '/', '|', '\\' };
 bool enable_collect_data=false;
 bool enable_cli=false;
+bool eeprom_bad=false;
+
 
 char str_voltage[8];
 char str_current[8];
@@ -57,13 +66,15 @@ char str_post[2048];
 
 // EEPROM data
 uint16_t mark = 0x55aa;
+uint8_t intries = 0;
 char ssid[33];
 char passw[65];
 char host[17];
 uint16_t port = 80;
 char uri[128];
 
-#define PT_SSID         sizeof(mark)
+#define PT_INTRIES      sizeof(mark)
+#define PT_SSID         PT_INTRIES + sizeof(uint8_t)
 #define PT_PASSW        PT_SSID + sizeof(passw)
 #define PT_HOST         PT_PASSW + sizeof(passw)
 #define PT_PORT         PT_HOST + sizeof(host)
@@ -72,7 +83,7 @@ char uri[128];
 #define SIZE_EEPROM     PT_URI + sizeof(uri) - 1 // PT_CRC d'not count
 
 // Commands
-Command cmdSizing;
+// Command cmdSizing;
 Command cmdSsid;
 Command cmdPassw;
 Command cmdShow;
@@ -84,19 +95,28 @@ Command cmdReboot;
 Command cmdHelp;
 
 void setup(){
-  pinMode(D5, INPUT_PULLUP);
-
-  // initialize OLED
-  //u8x8.begin();
-  // u8x8.setBusClock(400000);
-  //u8x8.setFont(u8x8_font_8x13_1x2_f);
+  
+  lcd.begin(20, 4);
+  lcd.print("Booting...");
 
   EEPROM.begin(2048);
+  if ( ! eeprom_read() ) {
+    drawString(1, 2, "EEPROM failed");
+    eeprom_bad=true;
+  } else {
+    if ( ! is_conf_correct() ) {
+      drawString(1, 2, "Conf. incorrect");
+      eeprom_bad=true;
+    }
+  }
 
-  if ( !digitalRead(D5) ){
+  enable_cli = wait_for_key_pressed(3);
+  drawString(0, 0, "                  ");
+
+  if ( enable_cli ){
     // Command line mode
     enable_cli=true;
-    //u8x8.drawString(0, 2, "CommandLine Mode");
+    drawString(0, 0, "CommandLine Mode");
     Serial.begin(115200);
     delay(50);
     Serial.println("CommandLine Mode");
@@ -104,12 +124,8 @@ void setup(){
     SetSimpleCli();
   }else{
     // usual mode
-    if ( ! eeprom_read() ) {
-      //u8x8.drawString(1, 2, "EEPROM failed");
-      for(;;) delay(MAIN_DELAY);
-    }
-    if ( ! is_conf_correct() ) {
-      //u8x8.drawString(1, 2, "Conf. incorrect");
+    if ( eeprom_bad ) {
+      // drawString(2, 2, "Go to CLI and fix that");
       for(;;) delay(MAIN_DELAY);
     }
     enable_collect_data=true;
@@ -129,6 +145,7 @@ void setup(){
 } // setup()
 
 void loop(){
+      for(;;) delay(MAIN_DELAY);
   if (enable_cli) {
     loop_cli_mode();
   }else{
@@ -183,3 +200,18 @@ unsigned long res = 0;
   return( MAIN_DELAY - res );
 }
 
+void drawString( uint8_t col, uint8_t row, char *str ) {
+  lcd.setCursor(col, row);
+  lcd.print(str);
+}
+
+bool wait_for_key_pressed( uint8_t tries ) {
+  for ( uint8_t i=0; i < tries; i++ ) {
+      drawString( 0, 0, "Wait for key (" ); lcd.print(i+1); lcd.print(")");
+      delay(1000);
+      if ( analogRead(A0) < 500 ) {
+        return(true);
+      }
+  }
+  return(false);
+}
