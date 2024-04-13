@@ -64,23 +64,32 @@ char str_tmp[64];
 char str_post[2048];
 
 
+// Some default values
+uint8_t def_input_delay = 3;
+uint8_t def_poweroff_threshold = 50;
+uint8_t def_standalone = 1;
+
 // EEPROM data
 uint16_t mark = 0x55aa;
-uint8_t intries = 0;
+uint8_t input_delay = 3;
+uint8_t poweroff_threshold = 50;
+uint8_t standalone = 1;
 char ssid[33];
 char passw[65];
 char host[17];
 uint16_t port = 80;
 char uri[128];
 
-#define PT_INTRIES      sizeof(mark)
-#define PT_SSID         PT_INTRIES + sizeof(uint8_t)
-#define PT_PASSW        PT_SSID + sizeof(passw)
-#define PT_HOST         PT_PASSW + sizeof(passw)
-#define PT_PORT         PT_HOST + sizeof(host)
-#define PT_URI          PT_PORT + sizeof(uri)
-#define PT_CRC          PT_URI + sizeof(uri)
-#define SIZE_EEPROM     PT_URI + sizeof(uri) - 1 // PT_CRC d'not count
+#define PT_INPUT_DELAY      sizeof(mark)
+#define PT_POWER_THRESHOLD  PT_INPUT_DELAY + sizeof(input_delay)
+#define PT_STANDALONE       PT_POWER_THRESHOLD + sizeof(poweroff_threshold)
+#define PT_SSID             PT_STANDALONE + sizeof(standalone)
+#define PT_PASSW            PT_SSID + sizeof(passw)
+#define PT_HOST             PT_PASSW + sizeof(passw)
+#define PT_PORT             PT_HOST + sizeof(host)
+#define PT_URI              PT_PORT + sizeof(uri)
+#define PT_CRC              PT_URI + sizeof(uri)
+#define SIZE_EEPROM         PT_URI + sizeof(uri) - 1 // PT_CRC d'not count
 
 // Commands
 // Command cmdSizing;
@@ -99,7 +108,17 @@ void setup(){
   lcd.begin(20, 4);
   lcd.print("Booting...");
 
+#ifdef DEBUG_SERIAL
+  CONSOLE.begin(115200);
+  delay(50);
+  CONSOLE.println(".\nStart debugging serial");
+#endif
+  
   EEPROM.begin(2048);
+#ifdef DEBUG_SERIAL
+  CONSOLE.println("Init EEPROM");
+#endif
+
   if ( ! eeprom_read() ) {
     drawString(1, 2, "EEPROM failed");
     eeprom_bad=true;
@@ -110,42 +129,39 @@ void setup(){
     }
   }
 
+  if ( eeprom_bad ) {
+    load_defaults();
+  }
+  
+#ifdef DEBUG_SERIAL
+  CONSOLE.println("Waiting for user input");
+#endif
   enable_cli = wait_for_key_pressed(3);
   drawString(0, 0, "                  ");
 
-  if ( enable_cli ){
+  if ( enable_cli ) {
     // Command line mode
-    enable_cli=true;
     drawString(0, 0, "CommandLine Mode");
     Serial.begin(115200);
     delay(50);
-    Serial.println("CommandLine Mode");
-    (void)eeprom_read();
     SetSimpleCli();
+    Serial.println("Usage:");
+    Serial.println(cli.toString());
+    if ( eeprom_bad ){
+      Serial.println("\nEEPROM error or bad config, defaults loaded");
+    }
   }else{
     // usual mode
-    if ( eeprom_bad ) {
-      // drawString(2, 2, "Go to CLI and fix that");
-      for(;;) delay(MAIN_DELAY);
+    if ( standalone == 1 ) {
+      enable_collect_data=true;
+      // wifi_init();
+      memset(str_post,0,sizeof(str_post));
     }
-    enable_collect_data=true;
-  }
-
-#ifdef DEBUG_SERIAL
-    CONSOLE.begin(115200);
-    delay(50);
-    CONSOLE.println(".\nStart serial");
-#endif
-  
-  if (enable_collect_data) {
-//    wifi_init();
-    memset(str_post,0,sizeof(str_post));
   }
 
 } // setup()
 
 void loop(){
-      for(;;) delay(MAIN_DELAY);
   if (enable_cli) {
     loop_cli_mode();
   }else{
@@ -214,4 +230,13 @@ bool wait_for_key_pressed( uint8_t tries ) {
       }
   }
   return(false);
+}
+
+void load_defaults(){
+  input_delay=def_input_delay;
+  poweroff_threshold=def_poweroff_threshold;
+  standalone=def_standalone;
+#ifdef DEBUG_SERIAL
+  CONSOLE.println("Defaults loaded");
+#endif
 }
