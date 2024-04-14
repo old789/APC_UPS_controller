@@ -152,7 +152,7 @@ void setup(){
     }
   }else{
     // usual mode
-    if ( standalone == 1 ) {
+    if ( standalone == 0 ) {
       enable_collect_data=true;
       // wifi_init();
       memset(str_post,0,sizeof(str_post));
