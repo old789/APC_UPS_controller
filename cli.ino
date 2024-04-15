@@ -64,8 +64,13 @@ void  loop_cli_mode(){
       if ( argLen == 0 ) {
         Serial.println(emptyArg);
       }else{
-        input_delay = c.getArg(0).getValue().toInt();
-        Serial.println("Input delay set to " + c.getArg(0).getValue() + "s");
+        i = c.getArg(0).getValue().toInt();
+        if ( ( i == 0 ) || ( i > 60 ) ) {
+          Serial.println("Argument must be between 1 and 60");
+        }else{
+          input_delay = i;
+          Serial.println("Input delay set to " + c.getArg(0).getValue() + "s");
+        }
       }
     } else if (c == cmdPoweroff) {
       if ( argLen == 0 ) {
@@ -76,7 +81,10 @@ void  loop_cli_mode(){
           Serial.println("Argument must be between 0 and 99");
         }else{
           poweroff_threshold = i;
-          Serial.println("Battery threshold set to " + c.getArg(0).getValue() + "%");
+          if ( i == 0 ) 
+            Serial.println("Battery threshold disabled");
+          else
+            Serial.println("Battery threshold set to " + c.getArg(0).getValue() + "%");
         }
       }
     } else if (c == cmdStandalone) {
