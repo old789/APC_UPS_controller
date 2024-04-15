@@ -112,7 +112,7 @@ bool is_conf_correct(){
 #endif
   if (  ( input_delay == 0 ) || ( input_delay > 60 ) ||
         ( poweroff_threshold > 99 ) ||
-        ( standalone > 2 ) ||
+        ( standalone > 1 ) ||
         ( strlen(ssid) == 0 ) ||
         ( strlen(passw) == 0 ) ||
         ( strlen(host) == 0 ) ||

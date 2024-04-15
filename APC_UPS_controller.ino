@@ -92,7 +92,9 @@ char uri[128];
 #define SIZE_EEPROM         PT_URI + sizeof(uri) - 1 // PT_CRC d'not count
 
 // Commands
-// Command cmdSizing;
+Command cmdDelay;
+Command cmdPoweroff;
+Command cmdStandalone;
 Command cmdSsid;
 Command cmdPassw;
 Command cmdShow;

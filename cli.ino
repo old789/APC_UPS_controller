@@ -1,6 +1,15 @@
 
 void SetSimpleCli(){
 
+  cmdDelay = cli.addSingleArgCmd("delay");
+  cmdDelay.setDescription(" Set delay for waiting button press (1-60s)");
+
+  cmdPoweroff = cli.addSingleArgCmd("poweroff");
+  cmdPoweroff.setDescription(" Set battery threshold for power off (0-99%, 0=disable)");
+
+  cmdStandalone = cli.addSingleArgCmd("standalone");
+  cmdStandalone.setDescription(" Set standalone mode (0/1, 1=standlone)");
+
   cmdSsid = cli.addSingleArgCmd("ssid");
   cmdSsid.setDescription(" Set WiFi SSID");
 
@@ -33,7 +42,7 @@ void SetSimpleCli(){
 
 void  loop_cli_mode(){
   String input;
-  char emptyArg[] = "Argument is empty, do nothing";
+  const char emptyArg[] = "Argument is empty, do nothing";
   // uint8_t argNum = 0;
   uint8_t argLen = 0;
 
@@ -48,8 +57,44 @@ void  loop_cli_mode(){
     Command c = cli.getCmd();
     // argNum = c.countArgs();
     argLen = c.getArg(0).getValue().length();
+    unsigned int i=0;
 
-    if (c == cmdSsid) {
+
+    if (c == cmdDelay) {
+      if ( argLen == 0 ) {
+        Serial.println(emptyArg);
+      }else{
+        input_delay = c.getArg(0).getValue().toInt();
+        Serial.println("Input delay set to " + c.getArg(0).getValue() + "s");
+      }
+    } else if (c == cmdPoweroff) {
+      if ( argLen == 0 ) {
+        Serial.println(emptyArg);
+      }else{
+        i = c.getArg(0).getValue().toInt();
+        if ( i > 99 ) {
+          Serial.println("Argument must be between 0 and 99");
+        }else{
+          poweroff_threshold = i;
+          Serial.println("Battery threshold set to " + c.getArg(0).getValue() + "%");
+        }
+      }
+    } else if (c == cmdStandalone) {
+      if ( argLen == 0 ) {
+        Serial.println(emptyArg);
+      }else{
+        i = c.getArg(0).getValue().toInt();
+        if ( i > 1 ) {
+          Serial.println("Argument must be 0 or 1");
+        }else{
+          standalone = (uint8_t)i;
+          if ( standalone == 1 ) 
+            Serial.println("Standalone mode enabled");
+          else
+            Serial.println("Standalone mode disabled");
+        }
+      }
+    } else if (c == cmdSsid) {
       if ( argLen == 0 ) {
         Serial.println(emptyArg);
       }else{
