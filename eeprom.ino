@@ -110,22 +110,36 @@ bool is_conf_correct(){
   const char msg1[] = "Config incorrect";
   const char msg2[] = "Config good";
 #endif
+
+  if  ( standalone > 1 ) {
+#ifdef DEBUG_SERIAL
+    CONSOLE.println(msg1);
+#endif
+    return(false);
+  } 
+
   if (  ( input_delay == 0 ) || ( input_delay > 60 ) ||
-        ( poweroff_threshold > 99 ) ||
-        ( standalone > 1 ) ||
-        ( strlen(ssid) == 0 ) ||
-        ( strlen(passw) == 0 ) ||
-        ( strlen(host) == 0 ) ||
-        ( port == 0 ) ||
-        ( strlen(uri) == 0 ) 
-      ){
-    if ( enable_cli )
-      Serial.println(msg1);
+        ( poweroff_threshold > 99 ) ) {
 #ifdef DEBUG_SERIAL
     CONSOLE.println(msg1);
 #endif
     return(false);
   }
+
+  if  ( standalone == 0 ) {
+    if (( strlen(ssid) == 0 ) ||
+        ( strlen(passw) == 0 ) ||
+        ( strlen(host) == 0 ) ||
+        ( port == 0 ) ||
+        ( strlen(uri) == 0 ) 
+        ){
+#ifdef DEBUG_SERIAL
+      CONSOLE.println(msg1);
+#endif
+      return(false);
+    }
+  }
+
 #ifdef DEBUG_SERIAL
     CONSOLE.println(msg2);
 #endif
