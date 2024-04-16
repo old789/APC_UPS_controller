@@ -156,8 +156,17 @@ void setup(){
     // usual mode
     if ( standalone == 0 ) {
       enable_collect_data=true;
+      drawString(0, 0, "Network mode");
+#ifdef DEBUG_SERIAL
+      CONSOLE.print("Enter to network mode");
+#endif
       // wifi_init();
       memset(str_post,0,sizeof(str_post));
+    }else{
+#ifdef DEBUG_SERIAL
+      CONSOLE.print("Enter to standalone mode");
+#endif
+      drawString(0, 0, "Standalone mode");
     }
   }
 
@@ -177,7 +186,7 @@ void loop_usual_mode(){
   CONSOLE.println();
 #endif
 #ifdef DEBUG_SERIAL
-  CONSOLE.print("Round "); CONSOLE.println(upcounter++);
+  CONSOLE.println("Round " + String(upcounter++));
 #endif
 
   rc = read_ups();
