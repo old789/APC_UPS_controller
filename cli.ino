@@ -145,6 +145,15 @@ void  loop_cli_mode(){
       eeprom_save();
       Serial.println("Configuration saved to EEPROM");
     } else if (c == cmdShow) {
+      Serial.println("Input delay " + String(input_delay) + "s");
+      if ( poweroff_threshold == 0 ) 
+        Serial.println("Battery threshold disabled");
+      else
+        Serial.println("Battery threshold " + String(poweroff_threshold) + "%");
+      if ( standalone == 1 ) 
+        Serial.println("Standalone mode enabled");
+      else
+        Serial.println("Standalone mode disabled");
       Serial.print("WiFi SSID = \"");Serial.print(ssid);Serial.println("\"");
       Serial.print("WiFi password = \"");Serial.print(passw);Serial.println("\"");
       Serial.print("Host = \"");Serial.print(host);Serial.println("\"");
