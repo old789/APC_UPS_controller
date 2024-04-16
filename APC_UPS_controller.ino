@@ -138,7 +138,7 @@ void setup(){
 #ifdef DEBUG_SERIAL
   CONSOLE.println("Waiting for user input");
 #endif
-  enable_cli = wait_for_key_pressed(3);
+  enable_cli = wait_for_key_pressed(input_delay);
   drawString(0, 0, "                  ");
 
   if ( enable_cli ) {
