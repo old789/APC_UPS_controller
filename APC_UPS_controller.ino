@@ -26,7 +26,7 @@
 #define SHORT_DELAY MAIN_DELAY/10
 #define MAX_ALLOWED_INPUT 127
 
-#define UPS_SERIAL Serial
+#define UPS Serial
 #define CONSOLE Serial1
 
 // initialize the library by associating any needed LCD interface pin
@@ -53,6 +53,13 @@ bool enable_collect_data=false;
 bool enable_cli=false;
 bool eeprom_bad=false;
 
+String inString;
+String ups_desc[] = { "Y", "Bat_volt", "Int_temp", "Input_volt", "Power_loadPr", "Bat_levelPr", "Status"};
+String ups_sent[] = { "Y", "B", "C", "L", "P", "f", "Q"};
+float ups_reciv[20];
+uint8_t ups_count = 0;
+uint16_t ups_maxcount = 7;
+bool ups_alarm = false;
 
 char str_voltage[8];
 char str_current[8];
@@ -154,6 +161,8 @@ void setup(){
     }
   }else{
     // usual mode
+    UPS.begin(2400);
+    delay(50);
     if ( standalone == 0 ) {
       enable_collect_data=true;
       drawString(0, 0, "Network mode");
@@ -189,22 +198,28 @@ void loop_usual_mode(){
   CONSOLE.println("Round " + String(upcounter++));
 #endif
 
+  UPS.println(ups_sent[ups_count]);
   rc = read_ups();
   if (rc){
-//    fill_screen();
 //    draw_screen();
     if ( enable_collect_data ) {
 //      collect_data();
     }
   }else{
-//    memset(screen_cur,0,sizeof(screen_cur));
-//    strncpy(screen_cur[1]," !UPS Error!",LCD_COLS);
     if ( enable_collect_data && ( uint8_t(str_post[0]) != 0 ) ) { // data send emergency
       //send_data();
     }else{
       //draw_screen();
     }
   }
+
+  if ( ++ups_count >= ups_maxcount ) {
+    ups_count=0;
+#ifdef  DEBUG_SERIAL
+    CONSOLE.println();
+#endif
+  }
+
   ticks_sleep=neat_interval(ticks_start);
 #ifdef DEBUG_SERIAL
   CONSOLE.print("End of loop, sleeping for ");CONSOLE.print(ticks_sleep);CONSOLE.println("ms");
