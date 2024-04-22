@@ -199,6 +199,9 @@ void loop_usual_mode(){
 #endif
 
   UPS.println(ups_sent[ups_count]);
+#ifdef  DEBUG_SERIAL
+    CONSOLE.println("sent command \"" + ups_sent[ups_count] + "\"");
+#endif
   rc = read_ups();
   if (rc){
 //    draw_screen();
@@ -206,6 +209,9 @@ void loop_usual_mode(){
 //      collect_data();
     }
   }else{
+#ifdef  DEBUG_SERIAL
+    CONSOLE.println("no answer from UPS");
+#endif
     if ( enable_collect_data && ( uint8_t(str_post[0]) != 0 ) ) { // data send emergency
       //send_data();
     }else{
@@ -215,9 +221,9 @@ void loop_usual_mode(){
 
   if ( ++ups_count >= ups_maxcount ) {
     ups_count=0;
-#ifdef  DEBUG_SERIAL
-    CONSOLE.println();
-#endif
+//#ifdef  DEBUG_SERIAL
+//    CONSOLE.println("ups_count cleared");
+//#endif
   }
 
   ticks_sleep=neat_interval(ticks_start);

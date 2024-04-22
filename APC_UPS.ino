@@ -1,4 +1,5 @@
-bool read_ups() { 
+bool read_ups() {
+  bool rc = false;
   while (UPS.available()) {
     char inChar2 = UPS.read();
     if ( isdigit(inChar2) )
@@ -20,10 +21,11 @@ bool read_ups() {
     if (inChar2 == '\n' && inString.length()>0) {
       ups_reciv[ups_count] = inString.toFloat();
 #ifdef DEBUG_SERIAL
-      CONSOLE.print(ups_desc[ups_count] + ": " + ups_reciv[ups_count] + "; ")
+      CONSOLE.print(ups_desc[ups_count] + ": " + ups_reciv[ups_count] + "; ");
 #endif
       inString = "";
+      rc = true;
     }
   }
-  return(true);
+  return(rc);
 }
