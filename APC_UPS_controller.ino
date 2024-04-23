@@ -202,6 +202,7 @@ void loop_usual_mode(){
 #ifdef  DEBUG_SERIAL
     CONSOLE.println("sent command \"" + ups_sent[ups_count] + "\"");
 #endif
+  delay(100);
   rc = read_ups();
   if (rc){
 //    draw_screen();
