@@ -54,11 +54,13 @@ bool enable_cli=false;
 bool eeprom_bad=false;
 
 String inString;
-String ups_desc[] = { "Y", "Bat_volt", "Int_temp", "Input_volt", "Power_loadPr", "Bat_levelPr", "Status"};
-String ups_sent[] = { "Y", "B", "C", "L", "P", "f", "Q"};
+String ups_desc[] = { "Bat_volt", "Int_temp", "Input_volt", "Power_loadPr", "Bat_levelPr", "Status"};
+String ups_sent[] = { "B", "C", "L", "P", "f", "Q"};
+String ups_model;
 float ups_reciv[20];
 uint8_t ups_count = 0;
 uint16_t ups_maxcount = 7;
+bool ups_init = true;
 bool ups_alarm = false;
 
 char str_voltage[8];
@@ -198,13 +200,23 @@ void loop_usual_mode(){
   CONSOLE.println("Round " + String(upcounter++));
 #endif
 
-  UPS.println(ups_sent[ups_count]);
+  if ( ups_init ) {
+    UPS.println("Y");
+    delay(100);
+    UPS.println("\x1");   //Ctrl+A
+#ifdef  DEBUG_SERIAL
+    CONSOLE.println("sent init command");
+#endif
+  } else {
+    UPS.println(ups_sent[ups_count]);
 #ifdef  DEBUG_SERIAL
     CONSOLE.println("sent command \"" + ups_sent[ups_count] + "\"");
 #endif
+  }
   delay(100);
   rc = read_ups();
   if (rc){
+      ups_init=false;
 //    draw_screen();
     if ( enable_collect_data ) {
 //      collect_data();
@@ -213,6 +225,7 @@ void loop_usual_mode(){
 #ifdef  DEBUG_SERIAL
     CONSOLE.println("no answer from UPS");
 #endif
+    ups_init=true;
     if ( enable_collect_data && ( uint8_t(str_post[0]) != 0 ) ) { // data send emergency
       //send_data();
     }else{

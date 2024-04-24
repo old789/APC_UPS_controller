@@ -19,10 +19,17 @@ bool read_ups() {
 #endif
     }
     if (inChar2 == '\n' && inString.length()>0) {
-      ups_reciv[ups_count] = inString.toFloat();
+      if ( ups_init ){
+        ups_model = inString;
 #ifdef DEBUG_SERIAL
-      CONSOLE.println(ups_desc[ups_count] + ": " + ups_reciv[ups_count] + "; ");
+        CONSOLE.println("UPS model: \"" + inString + "\"");
 #endif
+      } else {
+        ups_reciv[ups_count] = inString.toFloat();
+#ifdef DEBUG_SERIAL
+        CONSOLE.println(ups_desc[ups_count] + ": " + ups_reciv[ups_count] + "; ");
+#endif
+      }
       inString = "";
       rc = true;
     }
