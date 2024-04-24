@@ -59,7 +59,7 @@ String ups_sent[] = { "B", "C", "L", "P", "f", "Q"};
 String ups_model;
 float ups_reciv[20];
 uint8_t ups_count = 0;
-uint16_t ups_maxcount = 7;
+uint16_t ups_maxcount = 6;
 bool ups_init = true;
 bool ups_alarm = false;
 
@@ -201,14 +201,17 @@ void loop_usual_mode(){
 #endif
 
   if ( ups_init ) {
-    UPS.println("Y");
+    UPS.print("Y");
     delay(100);
-    UPS.println("\x1");   //Ctrl+A
+    rc = read_ups();
+    delay(100);
+    UPS.print("\x1");   //Ctrl+A
+    delay(400);
 #ifdef  DEBUG_SERIAL
     CONSOLE.println("sent init command");
 #endif
   } else {
-    UPS.println(ups_sent[ups_count]);
+    UPS.print(ups_sent[ups_count]);
 #ifdef  DEBUG_SERIAL
     CONSOLE.println("sent command \"" + ups_sent[ups_count] + "\"");
 #endif
