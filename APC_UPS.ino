@@ -28,6 +28,7 @@ bool read_ups() {
       }
       inString = "";
       rc = true;
+      ups_cmd_sent = false;
     } else {
       if ( ups_init ) {
         if ( isPrintable(inChar2) ) {
@@ -39,4 +40,47 @@ bool read_ups() {
     }
   }
   return(rc);
+}
+
+void ups_send_cmd() {
+  if ( ups_cmd_sent ) {
+    if ( ++ups_sent_tries <= MAX_UPS_SENT_TRIES ) {
+      return;
+    } else {
+      ups_init=true;
+      ups_model=true;
+      ups_sent_tries=0;
+ #ifdef  DEBUG_SERIAL
+      CONSOLE.println("no answer from UPS");
+#endif
+    }
+  } else if ( ups_init ) {
+    ups_init = false;
+  } else if ( ups_model ) {
+    ups_model = false;
+  } else if ( ++ups_count >= ups_maxcount ) {
+    ups_count=0;
+//#ifdef  DEBUG_SERIAL
+//    CONSOLE.println("ups_count cleared");
+//#endif
+  }  
+ 
+
+  if ( ups_init ) {
+    UPS.print("Y");
+#ifdef  DEBUG_SERIAL
+    CONSOLE.println("sent init command");
+#endif
+  else if ( ups_model ) {
+    UPS.print("\x1");   //Ctrl+A
+#ifdef  DEBUG_SERIAL
+    CONSOLE.println("ask UPS model");
+#endif
+  } else {
+    UPS.print(ups_sent[ups_count]);
+#ifdef  DEBUG_SERIAL
+    CONSOLE.println("sent command \"" + ups_sent[ups_count] + "\"");
+#endif
+  }
+  ups_cmd_sent = true;
 }

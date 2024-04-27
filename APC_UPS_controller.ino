@@ -20,11 +20,14 @@
 
 #include <SimpleCLI.h>  // https://github.com/SpacehuhnTech/SimpleCLI
 
+#include "TickTwo.h"    // https://github.com/sstaub/TickTwo
+
 #define LCD_COLS 20
 #define LCD_ROWS 4
 #define MAIN_DELAY 1000
 #define SHORT_DELAY MAIN_DELAY/10
 #define MAX_ALLOWED_INPUT 127
+#define MAX_UPS_SENT_TRIES 3
 
 #define UPS Serial
 #define CONSOLE Serial1
@@ -38,6 +41,9 @@ SimpleCLI cli;
 
 // Create WiFi Client
 WiFiClient client;
+
+// Create timer object
+TickTwo timer1(ups_send_cmd, 1000);
 
 double voltage, current, power, energy, freq, pwfactor;
 uint8_t input_tries=0;
@@ -61,7 +67,10 @@ float ups_reciv[20];
 uint8_t ups_count = 0;
 uint16_t ups_maxcount = 6;
 bool ups_init = true;
+bool ups_model = true;
 bool ups_alarm = false;
+uint8_t ups_sent_tries = 0;
+bool ups_cmd_sent  = false;
 
 char str_voltage[8];
 char str_current[8];
@@ -179,6 +188,7 @@ void setup(){
 #endif
       drawString(0, 0, "Standalone mode");
     }
+    timer1.start();
   }
 
 } // setup()
@@ -192,43 +202,14 @@ void loop(){
 }
 
 void loop_usual_mode(){
-  ticks_start=millis();
-#if defined ( DEBUG_SENSOR ) || defined ( DBG_WIFI )
-  CONSOLE.println();
-#endif
-#ifdef DEBUG_SERIAL
-  CONSOLE.println("Round " + String(upcounter++));
-#endif
 
-  if ( ups_init ) {
-    UPS.print("Y");
-    delay(100);
-    rc = read_ups();
-    delay(100);
-    UPS.print("\x1");   //Ctrl+A
-    delay(400);
-#ifdef  DEBUG_SERIAL
-    CONSOLE.println("sent init command");
-#endif
-  } else {
-    UPS.print(ups_sent[ups_count]);
-#ifdef  DEBUG_SERIAL
-    CONSOLE.println("sent command \"" + ups_sent[ups_count] + "\"");
-#endif
-  }
-  delay(100);
   rc = read_ups();
   if (rc){
-      ups_init=false;
 //    draw_screen();
     if ( enable_collect_data ) {
 //      collect_data();
     }
   }else{
-#ifdef  DEBUG_SERIAL
-    CONSOLE.println("no answer from UPS");
-#endif
-    ups_init=true;
     if ( enable_collect_data && ( uint8_t(str_post[0]) != 0 ) ) { // data send emergency
       //send_data();
     }else{
@@ -236,18 +217,6 @@ void loop_usual_mode(){
     }
   }
 
-  if ( ++ups_count >= ups_maxcount ) {
-    ups_count=0;
-//#ifdef  DEBUG_SERIAL
-//    CONSOLE.println("ups_count cleared");
-//#endif
-  }
-
-  ticks_sleep=neat_interval(ticks_start);
-#ifdef DEBUG_SERIAL
-  CONSOLE.print("End of loop, sleeping for ");CONSOLE.print(ticks_sleep);CONSOLE.println("ms");
-#endif
-  delay(ticks_sleep);
 }
 
 unsigned long neat_interval( unsigned long ticks_start ){
