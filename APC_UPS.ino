@@ -16,6 +16,10 @@ bool read_ups() {
       inString += ",";
     } else if ( inChar2 == '\n' && inString.length() > 0 ) {
       if ( ups_init ){
+#ifdef DEBUG_SERIAL
+        CONSOLE.println("UPS answered after init: \"" + inString + "\"");
+#endif
+      } else if ( ups_get_model ) {
         ups_model = inString;
 #ifdef DEBUG_SERIAL
         CONSOLE.println("UPS model: \"" + inString + "\"");
@@ -30,7 +34,7 @@ bool read_ups() {
       rc = true;
       ups_cmd_sent = false;
     } else {
-      if ( ups_init ) {
+      if ( ups_init || ups_get_model ) {
         if ( isPrintable(inChar2) ) {
           inString += inChar2;
         }
@@ -48,7 +52,7 @@ void ups_send_cmd() {
       return;
     } else {
       ups_init=true;
-      ups_model=true;
+      ups_get_model=true;
       ups_sent_tries=0;
  #ifdef  DEBUG_SERIAL
       CONSOLE.println("no answer from UPS");
@@ -56,22 +60,21 @@ void ups_send_cmd() {
     }
   } else if ( ups_init ) {
     ups_init = false;
-  } else if ( ups_model ) {
-    ups_model = false;
+  } else if ( ups_get_model ) {
+    ups_get_model = false;
   } else if ( ++ups_count >= ups_maxcount ) {
     ups_count=0;
 //#ifdef  DEBUG_SERIAL
 //    CONSOLE.println("ups_count cleared");
 //#endif
-  }  
+  }
  
-
   if ( ups_init ) {
     UPS.print("Y");
 #ifdef  DEBUG_SERIAL
     CONSOLE.println("sent init command");
 #endif
-  else if ( ups_model ) {
+  } else if ( ups_get_model ) {
     UPS.print("\x1");   //Ctrl+A
 #ifdef  DEBUG_SERIAL
     CONSOLE.println("ask UPS model");

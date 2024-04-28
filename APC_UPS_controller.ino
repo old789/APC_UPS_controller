@@ -32,6 +32,8 @@
 #define UPS Serial
 #define CONSOLE Serial1
 
+void ups_send_cmd();
+
 // initialize the library by associating any needed LCD interface pin
 // with the arduino pin number it is connected to
 LiquidCrystal lcd(D1, D2, D3, D5, D6, D7);
@@ -43,16 +45,12 @@ SimpleCLI cli;
 WiFiClient client;
 
 // Create timer object
-TickTwo timer1(ups_send_cmd, 1000);
+TickTwo timer1( ups_send_cmd, 1000);
 
-double voltage, current, power, energy, freq, pwfactor;
+double voltage, power;
 uint8_t input_tries=0;
-unsigned long upcounter=0;
-unsigned long ticks_sleep=0;
-unsigned long ticks_start=0;
-unsigned long ticks_last=0;
 bool rc=false;
-uint16_t cnt=0;
+// uint16_t cnt=0;
 uint8_t roll_cnt=0;
 char roller[] = { '-', '/', '|', '\\' };
 bool enable_collect_data=false;
@@ -67,17 +65,17 @@ float ups_reciv[20];
 uint8_t ups_count = 0;
 uint16_t ups_maxcount = 6;
 bool ups_init = true;
-bool ups_model = true;
+bool ups_get_model = true;
 bool ups_alarm = false;
 uint8_t ups_sent_tries = 0;
 bool ups_cmd_sent  = false;
 
 char str_voltage[8];
-char str_current[8];
+// char str_current[8];
 char str_power[16];
-char str_energy[16];
-char str_freq[8];
-char str_pfactor[8];
+// char str_energy[16];
+// char str_freq[8];
+// char str_pfactor[8];
 char str_tmp[64];
 char str_post[2048];
 
@@ -178,16 +176,21 @@ void setup(){
       enable_collect_data=true;
       drawString(0, 0, "Network mode");
 #ifdef DEBUG_SERIAL
-      CONSOLE.print("Enter to network mode");
+      CONSOLE.println("Enter to network mode");
 #endif
       // wifi_init();
       memset(str_post,0,sizeof(str_post));
     }else{
 #ifdef DEBUG_SERIAL
-      CONSOLE.print("Enter to standalone mode");
+      CONSOLE.println("Enter to standalone mode");
 #endif
       drawString(0, 0, "Standalone mode");
     }
+    UPS.print("Y");
+    ups_cmd_sent = true;
+#ifdef  DEBUG_SERIAL
+    CONSOLE.println("sent init command from setup");
+#endif
     timer1.start();
   }
 
@@ -217,21 +220,7 @@ void loop_usual_mode(){
     }
   }
 
-}
-
-unsigned long neat_interval( unsigned long ticks_start ){
-unsigned long ticks_now=millis();
-unsigned long res = 0;
-
-  if ( ticks_now < ticks_start ) {
-    res = 0xffffffffffffffff - ticks_start + ticks_now;
-  }else{
-    res = ticks_now - ticks_start;
-  }
-  if ( res >= MAIN_DELAY ) {  // it is possible in case with net timeout
-    return(SHORT_DELAY);
-  }
-  return( MAIN_DELAY - res );
+  timer1.update();
 }
 
 void drawString( uint8_t col, uint8_t row, char *str ) {
