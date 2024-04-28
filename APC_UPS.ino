@@ -21,6 +21,7 @@ bool read_ups() {
 #endif
       } else if ( ups_get_model ) {
         ups_model = inString;
+        ups_comm=true;
 #ifdef DEBUG_SERIAL
         CONSOLE.println("UPS model: \"" + inString + "\"");
 #endif
@@ -54,6 +55,8 @@ void ups_send_cmd() {
       ups_init=true;
       ups_get_model=true;
       ups_sent_tries=0;
+      ups_model="";
+      ups_comm=false;
  #ifdef  DEBUG_SERIAL
       CONSOLE.println("no answer from UPS");
 #endif

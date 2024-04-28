@@ -33,6 +33,7 @@
 #define CONSOLE Serial1
 
 void ups_send_cmd();
+void lcd_fill();
 
 // initialize the library by associating any needed LCD interface pin
 // with the arduino pin number it is connected to
@@ -46,6 +47,7 @@ WiFiClient client;
 
 // Create timer object
 TickTwo timer1( ups_send_cmd, 1000);
+TickTwo timer2( lcd_fill, 8000);
 
 double voltage, power;
 uint8_t input_tries=0;
@@ -67,6 +69,9 @@ uint16_t ups_maxcount = 6;
 bool ups_init = true;
 bool ups_get_model = true;
 bool ups_alarm = false;
+bool ups_alarm_prev = false;
+bool ups_comm = false;
+bool ups_comm_prev = false;
 uint8_t ups_sent_tries = 0;
 bool ups_cmd_sent  = false;
 
@@ -192,6 +197,7 @@ void setup(){
     CONSOLE.println("sent init command from setup");
 #endif
     timer1.start();
+    timer2.start();
   }
 
 } // setup()
@@ -221,6 +227,7 @@ void loop_usual_mode(){
   }
 
   timer1.update();
+  timer2.update();
 }
 
 void drawString( uint8_t col, uint8_t row, char *str ) {
@@ -247,3 +254,22 @@ void load_defaults(){
   CONSOLE.println("Defaults loaded");
 #endif
 }
+
+void lcd_fill(){
+  if ( ups_comm != ups_comm_prev ) {
+    if ( ups_comm && ! ups_get_model ) {
+      memset(str_tmp,0,sizeof(str_tmp));
+      memset(str_tmp,32,LCD_COLS);
+      ups_model.toCharArray(str_tmp,sizeof(str_tmp));
+      drawString( 0, 1, str_tmp );
+      ups_comm_prev=ups_comm;
+    } else if ( ups_comm_prev ) {
+      drawString( 0, 1,  "UPS not answered" );
+      ups_comm_prev=ups_comm;
+    }
+  }
+  if ( ! ups_comm ) {
+    return;
+  }
+}
+  
