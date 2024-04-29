@@ -26,9 +26,9 @@ bool read_ups() {
         CONSOLE.println("UPS model: \"" + inString + "\"");
 #endif
       } else {
-        ups_reciv[ups_count] = inString.toFloat();
+        ups_data[ups_cmd_count] = inString.toFloat();
 #ifdef DEBUG_SERIAL
-        CONSOLE.println(ups_desc[ups_count] + ": " + ups_reciv[ups_count] + "; ");
+        CONSOLE.println(ups_desc[ups_cmd_count] + ": " + ups_data[ups_cmd_count] + "; ");
 #endif
       }
       inString = "";
@@ -65,10 +65,10 @@ void ups_send_cmd() {
     ups_init = false;
   } else if ( ups_get_model ) {
     ups_get_model = false;
-  } else if ( ++ups_count >= ups_maxcount ) {
-    ups_count=0;
+  } else if ( ++ups_cmd_count >= ups_cmd_allcount ) {
+    ups_cmd_count=0;
 //#ifdef  DEBUG_SERIAL
-//    CONSOLE.println("ups_count cleared");
+//    CONSOLE.println("ups_cmd_count cleared");
 //#endif
   }
  
@@ -83,9 +83,9 @@ void ups_send_cmd() {
     CONSOLE.println("ask UPS model");
 #endif
   } else {
-    UPS.print(ups_sent[ups_count]);
+    UPS.print(ups_cmd[ups_cmd_count]);
 #ifdef  DEBUG_SERIAL
-    CONSOLE.println("sent command \"" + ups_sent[ups_count] + "\"");
+    CONSOLE.println("sent command \"" + ups_cmd[ups_cmd_count] + "\"");
 #endif
   }
   ups_cmd_sent = true;

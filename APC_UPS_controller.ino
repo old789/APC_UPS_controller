@@ -60,19 +60,20 @@ bool enable_cli=false;
 bool eeprom_bad=false;
 
 String inString;
-String ups_desc[] = { "Bat_volt", "Int_temp", "Input_volt", "Power_loadPr", "Bat_levelPr", "Status"};
-String ups_sent[] = { "B", "C", "L", "P", "f", "Q"};
 String ups_model;
-float ups_reciv[20];
-uint8_t ups_count = 0;
-uint16_t ups_maxcount = 6;
+String ups_desc[] = { "Bat_volt", "Int_temp", "Input_volt", "Power_loadPr", "Bat_levelPr", "Status"};
+String ups_desc_lcd[] = { "Ub=", "Tint=", "Uin=", "P%=", "B%=", "Status"};
+String ups_cmd[] = { "B", "C", "L", "P", "f", "Q"};
+float ups_data[6]={0};
+uint8_t ups_cmd_allcount = 6;
+uint8_t ups_cmd_count = 0;
+uint8_t ups_sent_tries = 0;
 bool ups_init = true;
 bool ups_get_model = true;
 bool ups_alarm = false;
 bool ups_alarm_prev = false;
 bool ups_comm = false;
 bool ups_comm_prev = false;
-uint8_t ups_sent_tries = 0;
 bool ups_cmd_sent  = false;
 
 char str_voltage[8];
@@ -175,11 +176,12 @@ void setup(){
     }
   }else{
     // usual mode
+    drawString(0, 0, "Initializing...");
     UPS.begin(2400);
     delay(50);
     if ( standalone == 0 ) {
       enable_collect_data=true;
-      drawString(0, 0, "Network mode");
+      // drawString(0, 0, "Network mode");
 #ifdef DEBUG_SERIAL
       CONSOLE.println("Enter to network mode");
 #endif
@@ -189,7 +191,7 @@ void setup(){
 #ifdef DEBUG_SERIAL
       CONSOLE.println("Enter to standalone mode");
 #endif
-      drawString(0, 0, "Standalone mode");
+      // drawString(0, 0, "Standalone mode");
     }
     UPS.print("Y");
     ups_cmd_sent = true;
@@ -256,20 +258,48 @@ void load_defaults(){
 }
 
 void lcd_fill(){
-  if ( ups_comm != ups_comm_prev ) {
+/*  if ( ups_comm != ups_comm_prev ) {
     if ( ups_comm && ! ups_get_model ) {
-      memset(str_tmp,0,sizeof(str_tmp));
-      memset(str_tmp,32,LCD_COLS);
-      ups_model.toCharArray(str_tmp,sizeof(str_tmp));
-      drawString( 0, 1, str_tmp );
+      // memset(str_tmp,0,sizeof(str_tmp));
+      // memset(str_tmp,32,LCD_COLS);
+      // ups_model.toCharArray(str_tmp,sizeof(str_tmp));
+      // drawString( 0, 0, str_tmp );
+      lcd.clear();
+      lcd.print(ups_model);
       ups_comm_prev=ups_comm;
     } else if ( ups_comm_prev ) {
-      drawString( 0, 1,  "UPS not answered" );
+      lcd.clear();
+      lcd.print("UPS not answered");
       ups_comm_prev=ups_comm;
     }
   }
+*/
+  lcd.clear();
+
   if ( ! ups_comm ) {
+    lcd.print("UPS not answered");
     return;
   }
+
+  lcd.print(ups_model);
+  lcd.setCursor(0,1);
+  lcd_print_status(ups_data[5]);
+  lcd.setCursor(0,2);
+  lcd.print( ups_desc_lcd[4] + int(round(ups_data[4])) + " " + ups_desc_lcd[0] + ups_data[0] + "V" );
+  lcd.setCursor(0,3);
+  lcd.print( ups_desc_lcd[2] + int(round(ups_data[2])) + "V " + ups_desc_lcd[3] + int(round(ups_data[3])) );
 }
-  
+
+void lcd_print_status( float status ) {
+  String s;
+  switch ( int(round(status)) ) {
+    case 0: s = "OFF line"; break;
+    case 8: s = "ON line"; break;
+    case 10: s = "On battery"; break;
+    case 50: s = "On battery - LOW"; break;
+    default: s = "Status unknown";
+  }
+  lcd.print(s);
+}
+
+ 
