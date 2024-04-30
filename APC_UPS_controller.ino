@@ -47,7 +47,7 @@ WiFiClient client;
 
 // Create timer object
 TickTwo timer1( ups_send_cmd, 1000);
-TickTwo timer2( lcd_fill, 8000);
+TickTwo timer2( lcd_fill, 4000);
 
 double voltage, power;
 uint8_t input_tries=0;
@@ -75,10 +75,11 @@ bool ups_alarm_prev = false;
 bool ups_comm = false;
 bool ups_comm_prev = false;
 bool ups_cmd_sent  = false;
+uint8_t screen = 0;
 
-char str_voltage[8];
+// char str_voltage[8];
 // char str_current[8];
-char str_power[16];
+// char str_power[16];
 // char str_energy[16];
 // char str_freq[8];
 // char str_pfactor[8];
@@ -258,36 +259,39 @@ void load_defaults(){
 }
 
 void lcd_fill(){
-/*  if ( ups_comm != ups_comm_prev ) {
-    if ( ups_comm && ! ups_get_model ) {
-      // memset(str_tmp,0,sizeof(str_tmp));
-      // memset(str_tmp,32,LCD_COLS);
-      // ups_model.toCharArray(str_tmp,sizeof(str_tmp));
-      // drawString( 0, 0, str_tmp );
-      lcd.clear();
-      lcd.print(ups_model);
-      ups_comm_prev=ups_comm;
-    } else if ( ups_comm_prev ) {
-      lcd.clear();
+  lcd.clear();
+  if ( screen == 0 ) {
+
+    if ( ! ups_comm ) {
       lcd.print("UPS not answered");
-      ups_comm_prev=ups_comm;
+    } else {
+      lcd.print(ups_model);
+      lcd.setCursor(0,1);
+      lcd_print_status(ups_data[5]);
+      lcd.setCursor(0,2);
+      lcd.print( ups_desc_lcd[4] + int(round(ups_data[4])) + " " + ups_desc_lcd[0] + ups_data[0] + "V" );
+      lcd.setCursor(0,3);
+      lcd.print( ups_desc_lcd[2] + int(round(ups_data[2])) + "V " + ups_desc_lcd[3] + int(round(ups_data[3])) );
+    }
+
+  }else{
+
+    if ( standalone ) {
+      lcd.print( "Standalone mode" );
+      lcd.setCursor(0,1);
+      lcd.print( ups_desc_lcd[1] + int(round(ups_data[1])) );
+    } else {
+      lcd.print( "Network mode" );
+      lcd.setCursor(0,1);
+      lcd.print( "IP" );
+      lcd.setCursor(0,2);
+      lcd.print( "Last answer" );
+      lcd.setCursor(0,3);
+      lcd.print( ups_desc_lcd[1] + int(round(ups_data[1])) );
     }
   }
-*/
-  lcd.clear();
 
-  if ( ! ups_comm ) {
-    lcd.print("UPS not answered");
-    return;
-  }
-
-  lcd.print(ups_model);
-  lcd.setCursor(0,1);
-  lcd_print_status(ups_data[5]);
-  lcd.setCursor(0,2);
-  lcd.print( ups_desc_lcd[4] + int(round(ups_data[4])) + " " + ups_desc_lcd[0] + ups_data[0] + "V" );
-  lcd.setCursor(0,3);
-  lcd.print( ups_desc_lcd[2] + int(round(ups_data[2])) + "V " + ups_desc_lcd[3] + int(round(ups_data[3])) );
+  screen = screen ^ 1;
 }
 
 void lcd_print_status( float status ) {
