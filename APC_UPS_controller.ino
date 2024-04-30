@@ -182,17 +182,15 @@ void setup(){
     delay(50);
     if ( standalone == 0 ) {
       enable_collect_data=true;
-      // drawString(0, 0, "Network mode");
 #ifdef DEBUG_SERIAL
       CONSOLE.println("Enter to network mode");
 #endif
-      // wifi_init();
+      wifi_init();
       memset(str_post,0,sizeof(str_post));
     }else{
 #ifdef DEBUG_SERIAL
       CONSOLE.println("Enter to standalone mode");
 #endif
-      // drawString(0, 0, "Standalone mode");
     }
     UPS.print("Y");
     ups_cmd_sent = true;
@@ -283,7 +281,8 @@ void lcd_fill(){
     } else {
       lcd.print( "Network mode" );
       lcd.setCursor(0,1);
-      lcd.print( "IP" );
+      lcd.print( "IP:" );
+      lcd.print( WiFi.localIP() );
       lcd.setCursor(0,2);
       lcd.print( "Last answer" );
       lcd.setCursor(0,3);
