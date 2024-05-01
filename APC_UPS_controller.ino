@@ -34,6 +34,8 @@
 
 void ups_send_cmd();
 void lcd_fill();
+void count_uptime();
+void send_data();
 
 // initialize the library by associating any needed LCD interface pin
 // with the arduino pin number it is connected to
@@ -48,11 +50,13 @@ WiFiClient client;
 // Create timer object
 TickTwo timer1( ups_send_cmd, 1000);
 TickTwo timer2( lcd_fill, 4000);
+TickTwo timer3( count_uptime, 1000);
+TickTwo timer4( send_data, 60000);
 
 double voltage, power;
 uint8_t input_tries=0;
 bool rc=false;
-// uint16_t cnt=0;
+unsigned long upticks=0;
 uint8_t roll_cnt=0;
 char roller[] = { '-', '/', '|', '\\' };
 bool enable_collect_data=false;
@@ -76,15 +80,8 @@ bool ups_comm = false;
 bool ups_comm_prev = false;
 bool ups_cmd_sent  = false;
 uint8_t screen = 0;
-
-// char str_voltage[8];
-// char str_current[8];
-// char str_power[16];
-// char str_energy[16];
-// char str_freq[8];
-// char str_pfactor[8];
-char str_tmp[64];
-char str_post[2048];
+int httpResponseCode = 0;
+char str_post[128];
 
 
 // Some default values
@@ -180,25 +177,27 @@ void setup(){
     drawString(0, 0, "Initializing...");
     UPS.begin(2400);
     delay(50);
+    timer1.start();
+    timer2.start();
+    timer3.start();
     if ( standalone == 0 ) {
-      enable_collect_data=true;
 #ifdef DEBUG_SERIAL
       CONSOLE.println("Enter to network mode");
 #endif
+      timer4.start();
       wifi_init();
-      memset(str_post,0,sizeof(str_post));
-    }else{
-#ifdef DEBUG_SERIAL
-      CONSOLE.println("Enter to standalone mode");
-#endif
     }
+#ifdef DEBUG_SERIAL
+    else{
+      CONSOLE.println("Enter to standalone mode");
+    }
+#endif
+
     UPS.print("Y");
     ups_cmd_sent = true;
 #ifdef  DEBUG_SERIAL
     CONSOLE.println("sent init command from setup");
 #endif
-    timer1.start();
-    timer2.start();
   }
 
 } // setup()
@@ -214,21 +213,12 @@ void loop(){
 void loop_usual_mode(){
 
   rc = read_ups();
-  if (rc){
-//    draw_screen();
-    if ( enable_collect_data ) {
-//      collect_data();
-    }
-  }else{
-    if ( enable_collect_data && ( uint8_t(str_post[0]) != 0 ) ) { // data send emergency
-      //send_data();
-    }else{
-      //draw_screen();
-    }
-  }
 
   timer1.update();
   timer2.update();
+  timer3.update();
+  if ( standalone == 0 )
+    timer4.update();
 }
 
 void drawString( uint8_t col, uint8_t row, char *str ) {
@@ -277,14 +267,18 @@ void lcd_fill(){
     if ( standalone ) {
       lcd.print( "Standalone mode" );
       lcd.setCursor(0,1);
+      lcd.print( "Uptime: ");
+      lcd.print( upticks );
+      lcd.setCursor(0,2);
       lcd.print( ups_desc_lcd[1] + int(round(ups_data[1])) );
     } else {
       lcd.print( "Network mode" );
       lcd.setCursor(0,1);
-      lcd.print( "IP:" );
+      lcd.print( "IP: " );
       lcd.print( WiFi.localIP() );
       lcd.setCursor(0,2);
-      lcd.print( "Last answer" );
+      lcd.print( "Last answer: " );
+      lcd.print( httpResponseCode );
       lcd.setCursor(0,3);
       lcd.print( ups_desc_lcd[1] + int(round(ups_data[1])) );
     }
@@ -305,4 +299,6 @@ void lcd_print_status( float status ) {
   lcd.print(s);
 }
 
- 
+void count_uptime() {
+  upticks++;
+}
