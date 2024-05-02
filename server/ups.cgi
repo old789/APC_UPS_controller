@@ -7,11 +7,10 @@ use Fcntl ':flock';
 
 my $log_file_name='/home/user/ups_stat/ups_stat_'.POSIX::strftime("%d_%m_%Y",localtime()).'.log';
 
-my @names=();
 my $name='';
 my $value='';
 my $pair='';
-#my %form=();
+my %form=();
 my $i=0;
 
 my $req_metod=exists($ENV{'REQUEST_METHOD'})?$ENV{'REQUEST_METHOD'}:"none";
@@ -31,14 +30,10 @@ foreach $pair (@pairs){
   if (($i=index($pair,"=")) < 1) { &mylogger(" - strange pair: ".$pair.($rem_addr?' ( IP '.$rem_addr.')':'')); next; }
   $name=substr($pair,0,$i);
   $value=substr($pair,$i+1);
-  write2log($name,$value);
-#  $form{$name}=$value;
-#  push(@names,$name);
+  $form{$name}=$value;
 }
 
-#foreach $name (@names){
-#  write2log($name,$form{$name});
-#}
+write2log();
 
 &byebye("OK\n");
 exit;
@@ -59,12 +54,20 @@ sub byebye{
 }
 
 sub write2log{
-my $name=shift;
-my $value=shift;
 my $try=0;;
 my $wr_str='';
 
-  $wr_str=POSIX::strftime("%d-%m-%Y %H:%M:%S",localtime()).' '.$name.' '.$value;
+  $wr_str=POSIX::strftime("%d-%m-%Y %H:%M:%S",localtime()).' '.
+          (exists($form{'name'})?$form{'name'}:'unknown').' '.
+          (exists($form{'model'})?'"'.$form{'model'}.'"':'"generic UPS"').' '.
+          (exists($form{'uptime'})?$form{'uptime'}:'nouptime').' ';
+  if (exists($form{'data'})) {
+    $wr_str.='data="'.$form{'data'}.'"';
+  }elsif (exists($form{'msg'})) {
+    $wr_str.='message="'.$form{'msg'}.'"';
+  }else{
+    $wr_str.='incorrect record';
+  }
 
   for ($try=0;$try<3;$try++){
     if (open(oLOG,">>".$log_file_name)) {
