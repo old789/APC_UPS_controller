@@ -1,14 +1,36 @@
 void send_data(){
-  char str_tmp[16];
+  char str_batt_volt[16];
+  char str_tmp[128];
 
   memset(str_post,0,sizeof(str_post));
+  
+  memset(str_tmp,0,sizeof(str_tmp));
+  sprintf(str_tmp, "uptime=%d", upticks);
+  strncpy(str_post, str_tmp, sizeof(str_post)-1);
+  
+  if (strlen(ups_name) > 0) {
+    memset(str_tmp,0,sizeof(str_tmp));
+    strncat(str_post, "&name=", sizeof(str_post)-1);
+    strncat(str_post, ups_name, sizeof(str_post)-1);
+  } 
+  
+  if (ups_model.length() > 0) {
+    memset(str_tmp,0,sizeof(str_tmp));
+    ups_model.toCharArray(str_tmp,sizeof(str_tmp)-1);
+    strncat(str_post, "&model=", sizeof(str_post)-1);
+    strncat(str_post, str_tmp, sizeof(str_post)-1);
+  }
+  
   memset(str_tmp,0,sizeof(str_tmp));
   if ( ups_comm ) {
-    dtostrf(ups_data[0],1,2,str_tmp);
-    sprintf(str_post,"m%u=%s,%i,%i,%i,%i,%i",upticks, str_tmp, int(round(ups_data[1])), int(round(ups_data[2])), int(round(ups_data[3])), int(round(ups_data[4])), int(round(ups_data[5])) );
+    memset(str_batt_volt,0,sizeof(str_batt_volt));
+    dtostrf(ups_data[0],1,2,str_batt_volt);
+    sprintf(str_tmp,"&data=%s,%i,%i,%i,%i,%i", str_batt_volt, int(round(ups_data[1])), int(round(ups_data[2])), int(round(ups_data[3])), int(round(ups_data[4])), int(round(ups_data[5])) );
+    strncat(str_post, str_tmp, sizeof(str_post)-1);
   } else {
-    strncpy(str_post, "UPS not answered", sizeof(str_post));
+    strncat(str_post, "&msg=UPS not answered", sizeof(str_post)-1);
   }
+
 #ifdef DBG_WIFI
   CONSOLE.print("Prepared data: \""); CONSOLE.print(str_post); CONSOLE.println("\"");
 #endif

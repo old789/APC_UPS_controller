@@ -64,7 +64,7 @@ bool enable_cli=false;
 bool eeprom_bad=false;
 
 String inString;
-String ups_model;
+String ups_model="";
 String ups_desc[] = { "Bat_volt", "Int_temp", "Input_volt", "Power_loadPr", "Bat_levelPr", "Status"};
 String ups_desc_lcd[] = { "Ub=", "Tint=", "Uin=", "P%=", "B%=", "Status"};
 String ups_cmd[] = { "B", "C", "L", "P", "f", "Q"};
@@ -81,8 +81,8 @@ bool ups_comm_prev = false;
 bool ups_cmd_sent  = false;
 uint8_t screen = 0;
 int httpResponseCode = 0;
-char str_post[128];
-
+char str_post[1024];
+char ups_name[33];
 
 // Some default values
 uint8_t def_input_delay = 3;
