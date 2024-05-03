@@ -293,13 +293,14 @@ void lcd_fill(){
 }
 
 void lcd_print_status( float status ) {
-  String s;
-  switch ( int(round(status)) ) {
-    case 0: s = "OFF line"; break;
-    case 8: s = "ON line"; break;
-    case 10: s = "On battery"; break;
-    case 50: s = "On battery - LOW"; break;
-    default: s = "Status unknown";
+  char s[21];
+  memset(s, 0, sizeof(s));
+  switch ( int(status) ) {
+    case 0: strncpy( s, "OFF line", sizeof(s)-1 ); break;
+    case 8: strncpy( s, "ON line", sizeof(s)-1 ); break;
+    case 10: strncpy( s, "On battery", sizeof(s)-1 ); break;
+    case 50: strncpy( s, "On battery - LOW", sizeof(s)-1 ); break;
+    default: strncpy( s, "Status unknown", sizeof(s)-1 );
   }
   lcd.print(s);
 }
