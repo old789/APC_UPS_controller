@@ -3,10 +3,8 @@ void send_data(){
   char str_tmp[128];
 
   memset(str_post,0,sizeof(str_post));
-  
-  memset(str_tmp,0,sizeof(str_tmp));
-  sprintf(str_tmp, "uptime=%d", upticks);
-  strncpy(str_post, str_tmp, sizeof(str_post)-1);
+  strncpy(str_post, "uptime=", sizeof(str_post)-1);
+  strncat(str_post, str_uptime, sizeof(str_post)-1);
   
   if (strlen(ups_name) > 0) {
     memset(str_tmp,0,sizeof(str_tmp));
@@ -21,8 +19,8 @@ void send_data(){
     strncat(str_post, str_tmp, sizeof(str_post)-1);
   }
   
-  memset(str_tmp,0,sizeof(str_tmp));
   if ( ups_comm ) {
+    memset(str_tmp,0,sizeof(str_tmp));
     memset(str_batt_volt,0,sizeof(str_batt_volt));
     dtostrf(ups_data[0],1,2,str_batt_volt);
     sprintf(str_tmp,"&data=%s,%i,%i,%i,%i,%i", str_batt_volt, int(round(ups_data[1])), int(round(ups_data[2])), int(round(ups_data[3])), int(round(ups_data[4])), int(round(ups_data[5])) );

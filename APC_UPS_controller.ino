@@ -22,6 +22,8 @@
 
 #include "TickTwo.h"    // https://github.com/sstaub/TickTwo
 
+#include "uptime.h"     // https://github.com/YiannisBourkelis/Uptime-Library
+
 #define LCD_COLS 20
 #define LCD_ROWS 4
 #define MAIN_DELAY 1000
@@ -56,7 +58,6 @@ TickTwo timer4( send_data, 60000);
 double voltage, power;
 uint8_t input_tries=0;
 bool rc=false;
-unsigned long upticks=0;
 uint8_t roll_cnt=0;
 char roller[] = { '-', '/', '|', '\\' };
 bool enable_collect_data=false;
@@ -81,6 +82,7 @@ bool ups_comm_prev = false;
 bool ups_cmd_sent  = false;
 uint8_t screen = 0;
 int httpResponseCode = 0;
+char str_uptime[33];
 char str_post[1024];
 
 // Some default values
@@ -182,6 +184,7 @@ void setup(){
     timer1.start();
     timer2.start();
     timer3.start();
+    strncpy( str_uptime, "0d0h0m0s\x0", sizeof(str_uptime)-1 );
     if ( standalone == 0 ) {
 #ifdef DEBUG_SERIAL
       CONSOLE.println("Enter to network mode");
@@ -269,8 +272,8 @@ void lcd_fill(){
     if ( standalone ) {
       lcd.print( "Standalone mode" );
       lcd.setCursor(0,1);
-      lcd.print( "Uptime: ");
-      lcd.print( upticks );
+      lcd.print( "Up: ");
+      lcd.print( str_uptime );
       lcd.setCursor(0,2);
       lcd.print( ups_desc_lcd[1] + int(round(ups_data[1])) );
     } else {
@@ -302,5 +305,7 @@ void lcd_print_status( float status ) {
 }
 
 void count_uptime() {
-  upticks++;
+  uptime::calculateUptime();
+  memset(str_uptime, 0, sizeof(str_uptime));
+  sprintf( str_uptime, "%ud%uh%um%us", uptime::getDays(), uptime::getHours(), uptime::getMinutes(), uptime::getSeconds() );
 }
