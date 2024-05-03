@@ -95,12 +95,12 @@ uint16_t mark = 0x55aa;
 uint8_t input_delay = 3;
 uint8_t poweroff_threshold = 50;
 uint8_t standalone = 1;
-char ups_name[33];
-char ssid[33];
-char passw[65];
-char host[17];
+char ups_name[33] = {0};
+char ssid[33] = {0};
+char passw[65] = {0};
+char host[65] = {0};
 uint16_t port = 80;
-char uri[128];
+char uri[128] = {0};
 
 #define PT_INPUT_DELAY      sizeof(mark)
 #define PT_POWER_THRESHOLD  PT_INPUT_DELAY + sizeof(input_delay)
