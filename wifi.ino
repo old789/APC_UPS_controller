@@ -60,9 +60,10 @@ void send_data(){
   // http.begin(client, serverName);
   http.begin(client, host, port, uri);
 
-  // If you need server authentication, insert user and password below
-  //http.setAuthorization("REPLACE_WITH_SERVER_USERNAME", "REPLACE_WITH_SERVER_PASSWORD");
-
+  if ( http_auth > 0 ) {
+    http.setAuthorization(http_user, http_passw);
+  }
+  
   //CONSOLE.println("http header");
   http.addHeader("Content-Type", "application/x-www-form-urlencoded");
   //http.addHeader("Content-Type", "text/plain");

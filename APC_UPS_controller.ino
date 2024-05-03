@@ -101,18 +101,24 @@ char passw[65] = {0};
 char host[65] = {0};
 uint16_t port = 80;
 char uri[128] = {0};
+uint8_t http_auth = 0;
+char http_user[33] = {0};
+char http_passw[33] = {0};
 
 #define PT_INPUT_DELAY      sizeof(mark)
 #define PT_POWER_THRESHOLD  PT_INPUT_DELAY + sizeof(input_delay)
 #define PT_STANDALONE       PT_POWER_THRESHOLD + sizeof(poweroff_threshold)
 #define PT_UPS_NAME         PT_STANDALONE + sizeof(standalone)
 #define PT_SSID             PT_UPS_NAME + sizeof(ups_name)
-#define PT_PASSW            PT_SSID + sizeof(passw)
+#define PT_PASSW            PT_SSID + sizeof(ssid)
 #define PT_HOST             PT_PASSW + sizeof(passw)
 #define PT_PORT             PT_HOST + sizeof(host)
-#define PT_URI              PT_PORT + sizeof(uri)
-#define PT_CRC              PT_URI + sizeof(uri)
-#define SIZE_EEPROM         PT_URI + sizeof(uri) - 1 // PT_CRC d'not count
+#define PT_URI              PT_PORT + sizeof(port)
+#define PT_AUTH             PT_URI + sizeof(uri)
+#define PT_HUSER            PT_AUTH + sizeof(http_auth)
+#define PT_HPASSW           PT_HUSER + sizeof(http_user)
+#define PT_CRC              PT_HPASSW + sizeof(http_passw)
+#define SIZE_EEPROM         PT_HPASSW + sizeof(http_passw) - 1 // PT_CRC d'not count
 
 // Commands
 Command cmdDelay;
@@ -125,6 +131,9 @@ Command cmdShow;
 Command cmdHost;
 Command cmdPort;
 Command cmdUri;
+Command cmdHauth;
+Command cmdHuser;
+Command cmdHpassw;
 Command cmdSave;
 Command cmdReboot;
 Command cmdHelp;

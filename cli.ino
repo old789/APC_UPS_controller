@@ -28,6 +28,15 @@ void SetSimpleCli(){
   cmdUri = cli.addSingleArgCmd("uri");
   cmdUri.setDescription(" Set destination URI");
 
+  cmdHauth = cli.addSingleArgCmd("auth");
+  cmdHauth.setDescription(" Set HTTP(S) authorization (0/1, 1=enable)");
+
+  cmdHuser = cli.addSingleArgCmd("huser");
+  cmdHuser.setDescription(" Set HTTP(S) username");
+
+  cmdHpassw = cli.addSingleArgCmd("hpassw");
+  cmdHpassw.setDescription(" Set HTTP(S) password");
+
   cmdShow = cli.addSingleArgCmd("show");
   cmdShow.setDescription(" Show configuration");
 
@@ -152,6 +161,37 @@ void  loop_cli_mode(){
         c.getArg(0).getValue().toCharArray(uri, sizeof(uri)-1 );
         Serial.println("URI set to \"" + c.getArg(0).getValue() + "\"");
       }
+    } else if (c == cmdHauth) {
+      if ( argLen == 0 ) {
+        Serial.println(emptyArg);
+      }else{
+        i = c.getArg(0).getValue().toInt();
+        if ( i > 1 ) {
+          Serial.println("Argument must be 0 or 1");
+        }else{
+          http_auth = (uint8_t)i;
+          if ( http_auth == 1 ) 
+            Serial.println("HTTP(S) authorization enabled");
+          else
+            Serial.println("HTTP(S) authorization disabled");
+        }
+      }
+    } else if (c == cmdHuser) {
+      if ( argLen == 0 ) {
+        Serial.println(emptyArg);
+      }else{
+        memset(http_user, 0, sizeof(http_user));
+        c.getArg(0).getValue().toCharArray(http_user, sizeof(http_user)-1 );
+        Serial.println("HTTP(S) username set to \"" + c.getArg(0).getValue() + "\"");
+      }
+    } else if (c == cmdHpassw) {
+      if ( argLen == 0 ) {
+        Serial.println(emptyArg);
+      }else{
+        memset(http_passw, 0, sizeof(http_passw));
+        c.getArg(0).getValue().toCharArray(http_passw, sizeof(http_passw)-1 );
+        Serial.println("HTTP(S) password set to \"" + c.getArg(0).getValue() + "\"");
+      }
     } else if (c == cmdSave) {
       eeprom_save();
       Serial.println("Configuration saved to EEPROM");
@@ -171,6 +211,12 @@ void  loop_cli_mode(){
       Serial.print("Host = \"");Serial.print(host);Serial.println("\"");
       Serial.print("Port = \"");Serial.print(port);Serial.println("\"");
       Serial.print("URI = \"");Serial.print(uri);Serial.println("\"");
+      if ( http_auth > 0 ) 
+        Serial.println("HTTP(S) authorization enabled");
+      else
+        Serial.println("HTTP(S) authorization disabled");
+      Serial.print("HTTP(S) username = \"");Serial.print(http_user);Serial.println("\"");
+      Serial.print("HTTP(S) password = \"");Serial.print(http_passw);Serial.println("\"");
     } else if (c == cmdReboot) {
       if ( ( argLen == 0 ) || c.getArg(0).getValue().equalsIgnoreCase("soft") ) {
         Serial.println("Reboot...");

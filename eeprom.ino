@@ -13,6 +13,9 @@ void eeprom_save(){
   EEPROM.put(PT_HOST, host);
   EEPROM.put(PT_PORT, port);
   EEPROM.put(PT_URI, uri);
+  EEPROM.put(PT_AUTH, http_auth);
+  EEPROM.put(PT_HUSER, http_user);
+  EEPROM.put(PT_HPASSW, http_passw);
   EEPROM.put(PT_CRC, ram_crc());
   EEPROM.commit();
 #ifdef DEBUG_SERIAL
@@ -51,6 +54,9 @@ unsigned long ram_crc() {
   memcpy(buf+PT_HOST, &host, strlen(host));
   memcpy(buf+PT_PORT, &port, sizeof(port));
   memcpy(buf+PT_URI, &uri, strlen(uri));
+  memcpy(buf+PT_AUTH, &http_auth, sizeof(http_auth));
+  memcpy(buf+PT_HUSER, &http_user, strlen(http_user));
+  memcpy(buf+PT_HPASSW, &http_passw, strlen(http_passw));
 
   for (uint16_t index = 0 ; index <= SIZE_EEPROM  ; ++index) {
     crc = crc_table[(crc ^ buf[index]) & 0x0f] ^ (crc >> 4);
@@ -93,6 +99,9 @@ const char msg3[] = "EEPROM read successful";
   EEPROM.get(PT_PORT, port);
   EEPROM.get(PT_URI, uri);
   EEPROM.get(PT_CRC, crc);
+  EEPROM.get(PT_AUTH, http_auth);
+  EEPROM.get(PT_HUSER, http_user);
+  EEPROM.get(PT_HPASSW, http_passw);
 
   if ( crc != ram_crc() ){
     if ( enable_cli )
@@ -140,6 +149,15 @@ bool is_conf_correct(){
       CONSOLE.println(msg1);
 #endif
       return(false);
+    } else if ( http_auth == 1 ) {
+      if (( strlen(http_user) == 0 ) || 
+          ( strlen(http_passw) == 0 )
+         ){
+#ifdef DEBUG_SERIAL
+      CONSOLE.println(msg1);
+#endif
+      return(false);
+      }
     }
   }
 
