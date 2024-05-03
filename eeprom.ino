@@ -7,6 +7,7 @@ void eeprom_save(){
   EEPROM.put(PT_INPUT_DELAY, input_delay);
   EEPROM.put(PT_POWER_THRESHOLD, poweroff_threshold);
   EEPROM.put(PT_STANDALONE, standalone);
+  EEPROM.put(PT_UPS_NAME, ups_name);
   EEPROM.put(PT_SSID, ssid);
   EEPROM.put(PT_PASSW, passw);
   EEPROM.put(PT_HOST, host);
@@ -44,6 +45,7 @@ unsigned long ram_crc() {
   memcpy(buf+PT_INPUT_DELAY, &input_delay, sizeof(input_delay));
   memcpy(buf+PT_POWER_THRESHOLD, &poweroff_threshold, sizeof(poweroff_threshold));
   memcpy(buf+PT_STANDALONE, &standalone, sizeof(standalone));
+  memcpy(buf+PT_UPS_NAME, &ups_name, strlen(ups_name));
   memcpy(buf+PT_SSID, &ssid, strlen(ssid));
   memcpy(buf+PT_PASSW, &passw, strlen(passw));
   memcpy(buf+PT_HOST, &host, strlen(host));
@@ -84,6 +86,7 @@ const char msg3[] = "EEPROM read successful";
   EEPROM.get(PT_INPUT_DELAY, input_delay);
   EEPROM.get(PT_POWER_THRESHOLD, poweroff_threshold);
   EEPROM.get(PT_STANDALONE, standalone);
+  EEPROM.get(PT_UPS_NAME, ups_name);
   EEPROM.get(PT_SSID, ssid);
   EEPROM.get(PT_PASSW, passw);
   EEPROM.get(PT_HOST, host);

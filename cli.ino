@@ -10,6 +10,9 @@ void SetSimpleCli(){
   cmdStandalone = cli.addSingleArgCmd("standalone");
   cmdStandalone.setDescription(" Set standalone mode (0/1, 1=standlone)");
 
+  cmdUpsName = cli.addSingleArgCmd("name");
+  cmdUpsName.setDescription(" Set UPS name");
+
   cmdSsid = cli.addSingleArgCmd("ssid");
   cmdSsid.setDescription(" Set WiFi SSID");
 
@@ -102,6 +105,14 @@ void  loop_cli_mode(){
             Serial.println("Standalone mode disabled");
         }
       }
+    } else if (c == cmdUpsName) {
+      if ( argLen == 0 ) {
+        Serial.println(emptyArg);
+      }else{
+        memset(ups_name, 0, sizeof(ups_name));
+        c.getArg(0).getValue().toCharArray(ups_name, sizeof(ups_name)-1 );
+        Serial.println("UPS name set to \"" + c.getArg(0).getValue() + "\"");
+      }
     } else if (c == cmdSsid) {
       if ( argLen == 0 ) {
         Serial.println(emptyArg);
@@ -154,6 +165,7 @@ void  loop_cli_mode(){
         Serial.println("Standalone mode enabled");
       else
         Serial.println("Standalone mode disabled");
+      Serial.print("UPS name = \"");Serial.print(ups_name);Serial.println("\"");
       Serial.print("WiFi SSID = \"");Serial.print(ssid);Serial.println("\"");
       Serial.print("WiFi password = \"");Serial.print(passw);Serial.println("\"");
       Serial.print("Host = \"");Serial.print(host);Serial.println("\"");
