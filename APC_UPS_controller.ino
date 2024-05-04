@@ -65,7 +65,7 @@ bool eeprom_bad=false;
 
 String inString;
 char ups_model[33] = {0};
-String ups_desc[] = { "Bat_volt", "Int_temp", "Input_volt", "Power_loadPr", "Bat_levelPr", "Status"};
+const char ups_desc[][33] = { "Bat_volt", "Int_temp", "Input_volt", "Power_loadPr", "Bat_levelPr", "Status"};
 String ups_desc_lcd[] = { "Ub=", "Tint=", "Uin=", "P%=", "B%=", "Status"};
 String ups_cmd[] = { "B", "C", "L", "P", "f", "Q"};
 float ups_data[6]={0};

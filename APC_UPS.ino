@@ -34,7 +34,10 @@ bool read_ups() {
       } else {
         ups_data[ups_cmd_count] = inString.toFloat();
 #ifdef DEBUG_UPS
-        CONSOLE.println(ups_desc[ups_cmd_count] + ": " + ups_data[ups_cmd_count] + "; ");
+        CONSOLE.print(ups_desc[ups_cmd_count]);
+        CONSOLE.print(": ");
+        CONSOLE.print(ups_data[ups_cmd_count]);
+        CONSOLE.println("; ");
 #endif
       }
       inString = "";
