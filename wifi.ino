@@ -1,7 +1,5 @@
-void send_data(){
-  char str_batt_volt[16];
+void make_post_header(){
   char str_tmp[128];
-
   memset(str_post,0,sizeof(str_post));
   strncpy(str_post, "uptime=", sizeof(str_post)-1);
   strncat(str_post, str_uptime, sizeof(str_post)-1);
@@ -18,7 +16,27 @@ void send_data(){
     strncat(str_post, "&model=", sizeof(str_post)-1);
     strncat(str_post, str_tmp, sizeof(str_post)-1);
   }
-  
+}  
+
+void send_alarm_ab_input(bool wtf){
+  make_post_header();
+  if ( wtf ) {
+    strncat(str_post, "alarm=\"no input voltage\"", sizeof(str_post)-1);
+  } else {
+    strncat(str_post, "alarm=\"return from fail state\"", sizeof(str_post)-1);
+  }
+
+#ifdef DBG_WIFI
+  CONSOLE.print("Alarm: \""); CONSOLE.print(str_post); CONSOLE.println("\"");
+#endif
+  send_data();
+}
+
+void usual_report(){
+  char str_batt_volt[16];
+  char str_tmp[128];
+
+  make_post_header();
   if ( ups_comm ) {
     memset(str_tmp,0,sizeof(str_tmp));
     memset(str_batt_volt,0,sizeof(str_batt_volt));
@@ -28,10 +46,20 @@ void send_data(){
   } else {
     strncat(str_post, "&msg=UPS not answered", sizeof(str_post)-1);
   }
-
 #ifdef DBG_WIFI
   CONSOLE.print("Prepared data: \""); CONSOLE.print(str_post); CONSOLE.println("\"");
 #endif
+  send_data();
+}
+
+void send_data(){
+
+  if ( strlen(str_post) == 0 ){
+#ifdef DBG_WIFI
+    CONSOLE.println("Nothing to send");
+#endif
+    return;
+  }
 
   //Check WiFi connection status
   if(WiFi.status() != WL_CONNECTED){
@@ -41,13 +69,6 @@ void send_data(){
     wifi_init();
   }
   
-  if ( strlen(str_post) == 0 ){
-#ifdef DBG_WIFI
-    CONSOLE.println("Nothing to send");
-#endif
-    return;
-  }
-
 #ifdef DBG_WIFI
   CONSOLE.println("Send data");
 #endif

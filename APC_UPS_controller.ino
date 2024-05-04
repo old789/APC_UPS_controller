@@ -37,7 +37,7 @@
 void ups_send_cmd();
 void lcd_fill();
 void count_uptime();
-void send_data();
+void usual_report();
 
 // initialize the library by associating any needed LCD interface pin
 // with the arduino pin number it is connected to
@@ -50,7 +50,7 @@ SimpleCLI cli;
 TickTwo timer1( ups_send_cmd, 1000);
 TickTwo timer2( lcd_fill, 4000);
 TickTwo timer3( count_uptime, 1000);
-TickTwo timer4( send_data, 60000);
+TickTwo timer4( usual_report, 60000);
 
 double voltage, power;
 uint8_t input_tries=0;
