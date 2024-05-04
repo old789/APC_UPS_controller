@@ -52,13 +52,17 @@ void send_data(){
   CONSOLE.println("Send data");
 #endif
 
+  std::unique_ptr<BearSSL::WiFiClientSecure>client(new BearSSL::WiFiClientSecure);
+  // Ignore SSL certificate validation
+  client->setInsecure();
+  
   //CONSOLE.println("HTTP client");
   HTTPClient http;
 
   //CONSOLE.println("http begin");
   // Your Domain name with URL path or IP address with path
   // http.begin(client, serverName);
-  http.begin(client, host, port, uri);
+  http.begin(*client, host, port, uri);
 
   if ( http_auth > 0 ) {
     http.setAuthorization(http_user, http_passw);

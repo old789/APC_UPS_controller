@@ -13,8 +13,8 @@
 #include <LiquidCrystal.h>
 
 #include <ESP8266WiFi.h>
-#include <WiFiClient.h>
 #include <ESP8266HTTPClient.h>
+#include <WiFiClientSecureBearSSL.h>
 
 #include <EEPROM.h>
 
@@ -45,9 +45,6 @@ LiquidCrystal lcd(D1, D2, D3, D5, D6, D7);
 
 // Create CLI Object
 SimpleCLI cli;
-
-// Create WiFi Client
-WiFiClient client;
 
 // Create timer object
 TickTwo timer1( ups_send_cmd, 1000);
@@ -99,7 +96,7 @@ char ups_name[33] = {0};
 char ssid[33] = {0};
 char passw[65] = {0};
 char host[65] = {0};
-uint16_t port = 80;
+uint16_t port = 443;
 char uri[128] = {0};
 uint8_t http_auth = 0;
 char http_user[33] = {0};
