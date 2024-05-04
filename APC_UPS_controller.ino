@@ -38,6 +38,7 @@ void ups_send_cmd();
 void lcd_fill();
 void count_uptime();
 void usual_report();
+void check_ups_status();
 
 // initialize the library by associating any needed LCD interface pin
 // with the arduino pin number it is connected to
@@ -50,7 +51,8 @@ SimpleCLI cli;
 TickTwo timer1( ups_send_cmd, 1000);
 TickTwo timer2( lcd_fill, 4000);
 TickTwo timer3( count_uptime, 1000);
-TickTwo timer4( usual_report, 60000);
+TickTwo timer4( check_ups_status, 2500);
+TickTwo timer5( usual_report, 60000);
 
 double voltage, power;
 uint8_t input_tries=0;
@@ -72,11 +74,14 @@ uint8_t ups_cmd_count = 0;
 uint8_t ups_sent_tries = 0;
 bool ups_init = true;
 bool ups_get_model = true;
+bool ups_shutdown = false;
 bool ups_alarm = false;
 bool ups_alarm_prev = false;
 bool ups_comm = false;
 bool ups_comm_prev = false;
-bool ups_cmd_sent  = false;
+bool ups_cmd_sent = false;
+bool ups_go_2_shutdown = false;
+bool first_report = true;
 uint8_t screen = 0;
 int httpResponseCode = 0;
 char str_uptime[33];
@@ -190,12 +195,13 @@ void setup(){
     timer1.start();
     timer2.start();
     timer3.start();
+    timer4.start();
     strncpy( str_uptime, "0d0h0m0s\x0", sizeof(str_uptime)-1 );
     if ( standalone == 0 ) {
 #ifdef DEBUG_SERIAL
       CONSOLE.println("Enter to network mode");
 #endif
-      timer4.start();
+      timer5.start();
       wifi_init();
     }
 #ifdef DEBUG_SERIAL
@@ -228,8 +234,9 @@ void loop_usual_mode(){
   timer1.update();
   timer2.update();
   timer3.update();
+  timer4.update();
   if ( standalone == 0 )
-    timer4.update();
+    timer5.update();
 }
 
 void drawString( uint8_t col, uint8_t row, char *str ) {
@@ -315,4 +322,43 @@ void count_uptime() {
   uptime::calculateUptime();
   memset(str_uptime, 0, sizeof(str_uptime));
   sprintf( str_uptime, "%ud%uh%um%us", uptime::getDays(), uptime::getHours(), uptime::getMinutes(), uptime::getSeconds() );
+}
+
+void check_ups_status() {
+  int status=int(round(status));
+  int battery=int(round(ups_data[4]));
+  
+  if ( poweroff_threshold == 0 ) {
+    return;
+  }
+  if ( ( status != 10 ) && ( status != 50 ) ) {
+    if ( ups_go_2_shutdown ) {   // power returned while UPS was in a grace period 
+      ups_go_2_shutdown = false;
+    }
+    return;
+  }
+  
+  if ( ups_go_2_shutdown ) {
+    return;
+  }
+  
+  if ( ( battery >= poweroff_threshold ) && ( status != 50 ) ) {
+    return;
+  }
+  
+#ifdef DEBUG_SERIAL
+  if ( status == 50 )
+    CONSOLE.println("Battery low");
+  else
+    CONSOLE.println("Battery level fall to poweroff threshold");
+#endif
+
+  UPS.print("S");
+  ups_cmd_sent = true;
+  ups_shutdown = true;
+  ups_go_2_shutdown = true; 
+  
+  if ( standalone == 0 ) {
+    send_alarm_ab_shutdown( status );
+  }
 }

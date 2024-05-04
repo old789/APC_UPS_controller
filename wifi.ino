@@ -18,12 +18,26 @@ void make_post_header(){
   }
 }  
 
-void send_alarm_ab_input(bool wtf){
+void send_alarm_ab_input( bool wtf ){
   make_post_header();
   if ( wtf ) {
-    strncat(str_post, "alarm=\"no input voltage\"", sizeof(str_post)-1);
+    strncat(str_post, "&alarm=\"no input voltage\"", sizeof(str_post)-1);
   } else {
-    strncat(str_post, "alarm=\"return from fail state\"", sizeof(str_post)-1);
+    strncat(str_post, "&alarm=\"return from fail state\"", sizeof(str_post)-1);
+  }
+
+#ifdef DBG_WIFI
+  CONSOLE.print("Alarm: \""); CONSOLE.print(str_post); CONSOLE.println("\"");
+#endif
+  send_data();
+}
+
+void send_alarm_ab_shutdown( int status ) {
+  make_post_header();
+  if ( status == 50 ) {
+    strncat(str_post, "&alarm=\"low battery, shutdown\"", sizeof(str_post)-1);
+  } else {
+    strncat(str_post, "&alarm=\"battery level fall to poweroff threshold\"", sizeof(str_post)-1);
   }
 
 #ifdef DBG_WIFI

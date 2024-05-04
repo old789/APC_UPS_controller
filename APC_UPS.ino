@@ -27,6 +27,10 @@ bool read_ups() {
 #ifdef DEBUG_UPS
         CONSOLE.println("UPS model: \"" + inString + "\"");
 #endif
+      } else if ( ups_shutdown ) {
+#ifdef DEBUG_UPS
+        CONSOLE.println("UPS answered after shutdown: \"" + inString + "\"");
+#endif
       } else {
         ups_data[ups_cmd_count] = inString.toFloat();
 #ifdef DEBUG_UPS
@@ -67,6 +71,8 @@ void ups_send_cmd() {
     ups_init = false;
   } else if ( ups_get_model ) {
     ups_get_model = false;
+  } else if ( ups_shutdown ) {
+    ups_shutdown = false;
   } else if ( ++ups_cmd_count >= ups_cmd_allcount ) {
     ups_cmd_count=0;
 //#ifdef DEBUG_UPS
