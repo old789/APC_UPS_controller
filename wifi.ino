@@ -132,7 +132,7 @@ void wifi_init(){
   WiFi.mode(WIFI_STA);
   WiFi.begin(ssid, passw);             // Connect to the network
 
-  drawString(0,1,"WiFi connecting");
+  lcd.setCursor(0,1); lcd.print("WiFi connecting");
 
   uint16_t i = 0;
   while (WiFi.status() != WL_CONNECTED) { // Wait for the Wi-Fi to connect

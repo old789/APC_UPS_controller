@@ -157,11 +157,11 @@ void setup(){
 #endif
 
   if ( ! eeprom_read() ) {
-    drawString(1, 2, "EEPROM failed");
+    lcd.setCursor(1, 2); lcd.print("EEPROM failed");
     eeprom_bad=true;
   } else {
     if ( ! is_conf_correct() ) {
-      drawString(1, 2, "Conf. incorrect");
+      lcd.setCursor(1, 2); lcd.print("Conf. incorrect");
       eeprom_bad=true;
     }
   }
@@ -174,11 +174,12 @@ void setup(){
   CONSOLE.println("Waiting for user input");
 #endif
   enable_cli = wait_for_key_pressed(input_delay);
-  drawString(0, 0, "                  ");
+  lcd.setCursor(0, 0);
+  lcd.print("                  ");
 
   if ( enable_cli ) {
     // Command line mode
-    drawString(0, 0, "CommandLine Mode");
+    lcd.setCursor(0, 0); lcd.print("CommandLine Mode");
     Serial.begin(115200);
     delay(50);
     SetSimpleCli();
@@ -189,7 +190,7 @@ void setup(){
     }
   }else{
     // usual mode
-    drawString(0, 0, "Initializing...");
+    lcd.setCursor(0, 0); lcd.print("Initializing...");
     UPS.begin(2400);
     delay(50);
     timer1.start();
@@ -239,14 +240,9 @@ void loop_usual_mode(){
     timer5.update();
 }
 
-void drawString( uint8_t col, uint8_t row, char *str ) {
-  lcd.setCursor(col, row);
-  lcd.print(str);
-}
-
 bool wait_for_key_pressed( uint8_t tries ) {
   for ( uint8_t i=0; i < tries; i++ ) {
-      drawString( 0, 0, "Wait for key (" ); lcd.print(i+1); lcd.print(")");
+      lcd.setCursor(0,0); lcd.print("Wait for key (" ); lcd.print(i+1); lcd.print(")");
       delay(1000);
       if ( analogRead(A0) < 500 ) {
         return(true);
