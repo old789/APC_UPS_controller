@@ -16,6 +16,11 @@ void make_post_header(){
     strncat(str_post, "&model=", sizeof(str_post)-1);
     strncat(str_post, str_tmp, sizeof(str_post)-1);
   }
+    
+  if ( first_report ) {
+    strncat(str_post, "&boot=1", sizeof(str_post)-1);
+    first_report = false;
+  }
 }  
 
 void send_alarm_ab_input( bool wtf ){
