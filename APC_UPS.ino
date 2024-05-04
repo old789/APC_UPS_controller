@@ -22,7 +22,7 @@ bool read_ups() {
         CONSOLE.println("UPS answered after init: \"" + inString + "\"");
 #endif
       } else if ( ups_get_model ) {
-        ups_model = inString;
+        inString.toCharArray(ups_model,sizeof(ups_model)-1);
         ups_comm=true;
 #ifdef DEBUG_UPS
         CONSOLE.println("UPS model: \"" + inString + "\"");
@@ -61,7 +61,7 @@ void ups_send_cmd() {
       ups_init=true;
       ups_get_model=true;
       ups_sent_tries=0;
-      ups_model="";
+      memset(ups_model, 0, sizeof(ups_model));
       ups_comm=false;
  #ifdef DEBUG_UPS
       CONSOLE.println("no answer from UPS");

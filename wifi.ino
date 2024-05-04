@@ -1,20 +1,16 @@
 void make_post_header(){
-  char str_tmp[128];
   memset(str_post,0,sizeof(str_post));
   strncpy(str_post, "uptime=", sizeof(str_post)-1);
   strncat(str_post, str_uptime, sizeof(str_post)-1);
   
   if (strlen(ups_name) > 0) {
-    memset(str_tmp,0,sizeof(str_tmp));
     strncat(str_post, "&name=", sizeof(str_post)-1);
     strncat(str_post, ups_name, sizeof(str_post)-1);
   } 
   
-  if (ups_model.length() > 0) {
-    memset(str_tmp,0,sizeof(str_tmp));
-    ups_model.toCharArray(str_tmp,sizeof(str_tmp)-1);
+  if (strlen(ups_model) > 0) {
     strncat(str_post, "&model=", sizeof(str_post)-1);
-    strncat(str_post, str_tmp, sizeof(str_post)-1);
+    strncat(str_post, ups_model, sizeof(str_post)-1);
   }
     
   if ( first_report ) {

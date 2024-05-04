@@ -64,7 +64,7 @@ bool enable_cli=false;
 bool eeprom_bad=false;
 
 String inString;
-String ups_model="";
+char ups_model[33] = {0};
 String ups_desc[] = { "Bat_volt", "Int_temp", "Input_volt", "Power_loadPr", "Bat_levelPr", "Status"};
 String ups_desc_lcd[] = { "Ub=", "Tint=", "Uin=", "P%=", "B%=", "Status"};
 String ups_cmd[] = { "B", "C", "L", "P", "f", "Q"};
