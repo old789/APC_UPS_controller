@@ -1,33 +1,33 @@
 bool read_ups() {
   bool rc = false;
   while (UPS.available()) {
-    char inChar2 = UPS.read();
-    if ( inChar2 == '!' ) {
-#ifdef DEBUG_SERIAL
+    char inChar = UPS.read();
+    if ( inChar == '!' ) {
+#ifdef DEBUG_UPS
       CONSOLE.println("No Input voltage"); 
 #endif
       ups_alarm = true;   
-    } else if (inChar2 == '$') {
+    } else if (inChar == '$') {
       ups_alarm = false;
-#ifdef DEBUG_SERIAL
+#ifdef DEBUG_UPS
       CONSOLE.println("Return from Fail"); 
 #endif
-    } else if ( inChar2 == '.' ){
+    } else if ( inChar == '.' ){
       inString += ",";
-    } else if ( inChar2 == '\n' && inString.length() > 0 ) {
+    } else if ( inChar == '\n' && inString.length() > 0 ) {
       if ( ups_init ){
-#ifdef DEBUG_SERIAL
+#ifdef DEBUG_UPS
         CONSOLE.println("UPS answered after init: \"" + inString + "\"");
 #endif
       } else if ( ups_get_model ) {
         ups_model = inString;
         ups_comm=true;
-#ifdef DEBUG_SERIAL
+#ifdef DEBUG_UPS
         CONSOLE.println("UPS model: \"" + inString + "\"");
 #endif
       } else {
         ups_data[ups_cmd_count] = inString.toFloat();
-#ifdef DEBUG_SERIAL
+#ifdef DEBUG_UPS
         CONSOLE.println(ups_desc[ups_cmd_count] + ": " + ups_data[ups_cmd_count] + "; ");
 #endif
       }
@@ -36,11 +36,11 @@ bool read_ups() {
       ups_cmd_sent = false;
     } else {
       if ( ups_init || ups_get_model ) {
-        if ( isPrintable(inChar2) ) {
-          inString += inChar2;
+        if ( isPrintable(inChar) ) {
+          inString += inChar;
         }
-      } else if ( isdigit(inChar2) ) {
-        inString += inChar2;
+      } else if ( isdigit(inChar) ) {
+        inString += inChar;
       }
     }
   }
@@ -57,7 +57,7 @@ void ups_send_cmd() {
       ups_sent_tries=0;
       ups_model="";
       ups_comm=false;
- #ifdef  DEBUG_SERIAL
+ #ifdef DEBUG_UPS
       CONSOLE.println("no answer from UPS");
 #endif
     }
@@ -67,24 +67,24 @@ void ups_send_cmd() {
     ups_get_model = false;
   } else if ( ++ups_cmd_count >= ups_cmd_allcount ) {
     ups_cmd_count=0;
-//#ifdef  DEBUG_SERIAL
+//#ifdef DEBUG_UPS
 //    CONSOLE.println("ups_cmd_count cleared");
 //#endif
   }
  
   if ( ups_init ) {
     UPS.print("Y");
-#ifdef  DEBUG_SERIAL
+#ifdef DEBUG_UPS
     CONSOLE.println("sent init command");
 #endif
   } else if ( ups_get_model ) {
     UPS.print("\x1");   //Ctrl+A
-#ifdef  DEBUG_SERIAL
+#ifdef DEBUG_UPS
     CONSOLE.println("ask UPS model");
 #endif
   } else {
     UPS.print(ups_cmd[ups_cmd_count]);
-#ifdef  DEBUG_SERIAL
+#ifdef DEBUG_UPS
     CONSOLE.println("sent command \"" + ups_cmd[ups_cmd_count] + "\"");
 #endif
   }
