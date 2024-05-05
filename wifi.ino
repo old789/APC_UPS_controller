@@ -134,19 +134,41 @@ void wifi_init(){
   while (WiFi.status() != WL_CONNECTED) { // Wait for the Wi-Fi to connect
     lcd.setCursor(19,1);
     lcd.write(roller[roll_cnt++]);
-    if ( roll_cnt >= sizeof(roller) ) roll_cnt=0;
+    if ( roll_cnt >= sizeof(roller)-1 ) roll_cnt=0;
     delay(100);
     i++;
 #ifdef DBG_WIFI
     CONSOLE.print(i); CONSOLE.print(' ');
 #endif
-    if ( i > 3000 ) {  // if don't connect switch to standalone
+    if ( i > 1500 ) {  // if don't connect - wait, then next try
+      if ( ++wifi_tries < 3 ) {
+        eeprom_save();  // remembering tries between reboots
 #ifdef DBG_WIFI
-      CONSOLE.print("WiFi timeout, switch to standalone");
+        CONSOLE.print("Try ");
+        CONSOLE.print(wifi_tries);
+        CONSOLE.println(" connect to WiFi");
 #endif
-      standalone = 1;
-      return;
+        lcd.setCursor(0,1); lcd.print("WiFi not connected  ");
+        for ( i=150; i > 0; i-- ) {
+          lcd.setCursor(0,2); lcd.print("Reboot after "); lcd.print(i); lcd.print("s   ");
+          delay(1000);
+        }
+        ESP.reset();
+      } else {
+        wifi_tries=0;
+        eeprom_save();
+#ifdef DBG_WIFI
+        CONSOLE.println("WiFi timeout, switch to standalone");
+#endif
+        standalone = 1;
+        return;
+      }
     }
+  }
+  
+  if ( wifi_tries != 0 ) {
+    wifi_tries=0;
+    eeprom_save();
   }
 
   WiFi.setAutoReconnect(true);

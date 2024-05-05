@@ -16,6 +16,8 @@ void eeprom_save(){
   EEPROM.put(PT_AUTH, http_auth);
   EEPROM.put(PT_HUSER, http_user);
   EEPROM.put(PT_HPASSW, http_passw);
+  EEPROM.put(PT_WIFI_TRIES, wifi_tries);
+  EEPROM.put(PT_AFTER_PARTY, after_party);
   EEPROM.put(PT_CRC, ram_crc());
   EEPROM.commit();
 #ifdef DEBUG_SERIAL
@@ -57,6 +59,8 @@ unsigned long ram_crc() {
   memcpy(buf+PT_AUTH, &http_auth, sizeof(http_auth));
   memcpy(buf+PT_HUSER, &http_user, strlen(http_user));
   memcpy(buf+PT_HPASSW, &http_passw, strlen(http_passw));
+  memcpy(buf+PT_WIFI_TRIES, &wifi_tries, sizeof(wifi_tries));
+  memcpy(buf+PT_AFTER_PARTY, &after_party, sizeof(after_party));
 
   for (uint16_t index = 0 ; index <= SIZE_EEPROM  ; ++index) {
     crc = crc_table[(crc ^ buf[index]) & 0x0f] ^ (crc >> 4);
@@ -102,6 +106,8 @@ const char msg3[] = "EEPROM read successful";
   EEPROM.get(PT_AUTH, http_auth);
   EEPROM.get(PT_HUSER, http_user);
   EEPROM.get(PT_HPASSW, http_passw);
+  EEPROM.get(PT_WIFI_TRIES, wifi_tries);
+  EEPROM.get(PT_AFTER_PARTY, after_party);
 
   if ( crc != ram_crc() ){
     if ( enable_cli )

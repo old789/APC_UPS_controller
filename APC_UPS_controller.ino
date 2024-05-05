@@ -99,6 +99,8 @@ char uri[128] = {0};
 uint8_t http_auth = 0;
 char http_user[33] = {0};
 char http_passw[33] = {0};
+uint8_t wifi_tries = 0;
+uint8_t after_party = 0;
 
 #define PT_INPUT_DELAY      sizeof(mark)
 #define PT_POWER_THRESHOLD  PT_INPUT_DELAY + sizeof(input_delay)
@@ -112,8 +114,10 @@ char http_passw[33] = {0};
 #define PT_AUTH             PT_URI + sizeof(uri)
 #define PT_HUSER            PT_AUTH + sizeof(http_auth)
 #define PT_HPASSW           PT_HUSER + sizeof(http_user)
-#define PT_CRC              PT_HPASSW + sizeof(http_passw)
-#define SIZE_EEPROM         PT_HPASSW + sizeof(http_passw) - 1 // PT_CRC d'not count
+#define PT_WIFI_TRIES       PT_HPASSW + sizeof(http_passw)
+#define PT_AFTER_PARTY      PT_WIFI_TRIES + sizeof(wifi_tries) 
+#define PT_CRC              PT_AFTER_PARTY + sizeof(after_party)
+#define SIZE_EEPROM         PT_AFTER_PARTY + sizeof(after_party) - 1 // PT_CRC d'not count
 
 // Commands
 Command cmdDelay;
