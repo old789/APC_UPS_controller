@@ -3,14 +3,18 @@ void read_ups() {
   while (UPS.available()) {
     inChar[0] = UPS.read();
     if ( inChar[0] == '!' ) {
-      // ups_alarm = true;
-      send_alarm_ab_input( true );
+      if  ( ! ups_alarm ) {
+        ups_alarm = true;
+        send_alarm_ab_input( true );
+      }
 #ifdef DEBUG_UPS
       CONSOLE.println("No Input voltage"); 
 #endif
     } else if (inChar[0] == '$') {
-      // ups_alarm = false;
-      send_alarm_ab_input( false );
+      if ( ups_alarm ) {
+        ups_alarm = false;
+        send_alarm_ab_input( false );
+      }
 #ifdef DEBUG_UPS
       CONSOLE.println("Return from Fail"); 
 #endif
