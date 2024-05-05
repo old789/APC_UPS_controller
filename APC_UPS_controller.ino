@@ -64,12 +64,11 @@ bool enable_cli=false;
 bool eeprom_bad=false;
 
 String inString;
-char ups_model[33] = {0};
-const char ups_desc[][33] = { "Bat_volt", "Int_temp", "Input_volt", "Power_loadPr", "Bat_levelPr", "Status"};
-String ups_desc_lcd[] = { "Ub=", "Tint=", "Uin=", "P%=", "B%=", "Status"};
-String ups_cmd[] = { "B", "C", "L", "P", "f", "Q"};
-float ups_data[6]={0};
-uint8_t ups_cmd_allcount = 6;
+const char ups_cmd[] = "BCLPfQ";
+const char* ups_desc[sizeof(ups_cmd)-1] = { "Bat_volt", "Int_temp", "Input_volt", "Power_loadPr", "Bat_levelPr", "Status"};
+const char* ups_desc_lcd[sizeof(ups_cmd)-1] = { "Ub=", "Tint=", "Uin=", "P%=", "B%=", "Status"};
+const uint8_t ups_cmd_allcount = sizeof(ups_cmd)-1;
+float ups_data[sizeof(ups_cmd)-1]={0};
 uint8_t ups_cmd_count = 0;
 uint8_t ups_sent_tries = 0;
 bool ups_init = true;
@@ -84,7 +83,8 @@ bool ups_go_2_shutdown = false;
 bool first_report = true;
 uint8_t screen = 0;
 int httpResponseCode = 0;
-char str_uptime[33];
+char ups_model[33] = {0};
+char str_uptime[17] = "0d0h0m0s";
 char str_post[1024];
 
 // Some default values
@@ -197,7 +197,6 @@ void setup(){
     timer2.start();
     timer3.start();
     timer4.start();
-    strncpy( str_uptime, "0d0h0m0s\x0", sizeof(str_uptime)-1 );
     if ( standalone == 0 ) {
 #ifdef DEBUG_SERIAL
       CONSOLE.println("Enter to network mode");
@@ -261,6 +260,8 @@ void load_defaults(){
 }
 
 void lcd_fill(){
+  char stmp[128];
+  char str_batt_volt[16];
   lcd.clear();
   if ( screen == 0 ) {
 
@@ -271,9 +272,15 @@ void lcd_fill(){
       lcd.setCursor(0,1);
       lcd_print_status(ups_data[5]);
       lcd.setCursor(0,2);
-      lcd.print( ups_desc_lcd[4] + int(round(ups_data[4])) + " " + ups_desc_lcd[0] + ups_data[0] + "V" );
+      memset(stmp, 0, sizeof(stmp));
+      memset(str_batt_volt,0,sizeof(str_batt_volt));
+      dtostrf(ups_data[0],1,2,str_batt_volt);
+      sprintf(stmp, "%s%i %s%sV", ups_desc_lcd[4], int(round(ups_data[4])), ups_desc_lcd[0], str_batt_volt);
+      lcd.print(stmp);
       lcd.setCursor(0,3);
-      lcd.print( ups_desc_lcd[2] + int(round(ups_data[2])) + "V " + ups_desc_lcd[3] + int(round(ups_data[3])) );
+      memset(stmp, 0, sizeof(stmp));
+      sprintf(stmp, "%s%iV %s%i", ups_desc_lcd[2], int(round(ups_data[2])), ups_desc_lcd[3], int(round(ups_data[3])));
+      lcd.print(stmp);
     }
 
   }else{
@@ -284,7 +291,8 @@ void lcd_fill(){
       lcd.print( "Up: ");
       lcd.print( str_uptime );
       lcd.setCursor(0,2);
-      lcd.print( ups_desc_lcd[1] + int(round(ups_data[1])) );
+      lcd.print( ups_desc_lcd[1] );
+      lcd.print( int(round(ups_data[1])) );
     } else {
       lcd.print( "Network mode" );
       lcd.setCursor(0,1);
@@ -294,7 +302,8 @@ void lcd_fill(){
       lcd.print( "Last answer: " );
       lcd.print( httpResponseCode );
       lcd.setCursor(0,3);
-      lcd.print( ups_desc_lcd[1] + int(round(ups_data[1])) );
+      lcd.print( ups_desc_lcd[1] );
+      lcd.print( int(round(ups_data[1])) );
     }
   }
 

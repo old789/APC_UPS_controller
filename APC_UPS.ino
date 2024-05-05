@@ -96,7 +96,11 @@ void ups_send_cmd() {
   } else {
     UPS.print(ups_cmd[ups_cmd_count]);
 #ifdef DEBUG_UPS
-    CONSOLE.println("sent command \"" + ups_cmd[ups_cmd_count] + "\"");
+    CONSOLE.print("sent command N");
+    CONSOLE.print(ups_cmd_count);
+    CONSOLE.print(" \"");
+    CONSOLE.print(ups_cmd[ups_cmd_count]);
+    CONSOLE.println("\"");
 #endif
   }
   ups_cmd_sent = true;
