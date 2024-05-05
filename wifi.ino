@@ -15,7 +15,10 @@ void make_post_header(){
     
   if ( first_report ) {
     strncat(str_post, "&boot=1", sizeof(str_post)-1);
-    first_report = false;
+  }
+  
+  if ( after_party != 0 ) {
+    strncat(str_post, "&alarm=\"boot after shutdown\"", sizeof(str_post)-1);
   }
 }  
 
@@ -116,6 +119,16 @@ void send_data(){
 
   // Free resources
   http.end();
+  
+  if ( httpResponseCode == 200 ) {
+    if ( first_report ) {
+      first_report = false;
+    }
+    if ( after_party != 0 ) {
+      after_party = 0;
+      eeprom_save();
+    }
+  }
 }
 
 void wifi_init(){

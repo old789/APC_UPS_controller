@@ -251,6 +251,8 @@ void load_defaults(){
   input_delay=def_input_delay;
   poweroff_threshold=def_poweroff_threshold;
   standalone=def_standalone;
+  wifi_tries=0;
+  after_party=0;
 #ifdef DEBUG_SERIAL
   CONSOLE.println("Defaults loaded");
 #endif
@@ -336,6 +338,10 @@ void check_ups_status() {
   if ( ( status != 10 ) && ( status != 50 ) ) {
     if ( ups_go_2_shutdown ) {   // power returned while UPS was in a grace period 
       ups_go_2_shutdown = false;
+      if ( ( standalone == 0 ) && ( after_party != 0 ) ) {
+        after_party=0;
+        eeprom_save();
+      }
     }
     return;
   }
@@ -362,5 +368,7 @@ void check_ups_status() {
   
   if ( standalone == 0 ) {
     send_alarm_ab_shutdown( status );
+    after_party++;
+    eeprom_save();
   }
 }

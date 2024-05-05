@@ -193,6 +193,8 @@ void  loop_cli_mode(){
         Serial.println("HTTP(S) password set to \"" + c.getArg(0).getValue() + "\"");
       }
     } else if (c == cmdSave) {
+      wifi_tries = 0;
+      after_party = 0;
       eeprom_save();
       Serial.println("Configuration saved to EEPROM");
     } else if (c == cmdShow) {
