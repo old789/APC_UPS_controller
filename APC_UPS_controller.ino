@@ -321,6 +321,27 @@ void lcd_print_status( float status ) {
     default: strncpy( s, "Status unknown", sizeof(s)-1 );
   }
   lcd.print(s);
+/*  based on the code from https://github.com/networkupstools/nut/blob/master/drivers/apcsmart.c
+	if (status & 0x1)
+		status_set("CAL");		/* calibration */
+	if (status & 0x2)
+		status_set("TRIM");		/* SmartTrim */
+	if (status & 0x4)
+		status_set("BOOST");		/* SmartBoost */
+	if (status & 0x8)
+		status_set("OL");		/* on line */
+	if (status & 0x10)
+		status_set("OB");		/* on battery */
+	if (status & 0x20)
+		status_set("OVER");		/* overload */
+	if (status & 0x40)
+		status_set("LB");		/* low battery */
+	if (status & 0x80)
+		status_set("RB");		/* replace batt */
+
+	if (status == 0)
+		status_set("OFF");
+/*
 }
 
 void count_uptime() {
