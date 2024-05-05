@@ -1,16 +1,15 @@
-bool read_ups() {
-  bool rc = false;
+void read_ups() {
   char inChar[2] = {0};  // because strncpy/strncat needs \0-terminated 2nd argument
   while (UPS.available()) {
     inChar[0] = UPS.read();
     if ( inChar[0] == '!' ) {
-      ups_alarm = true;
+      // ups_alarm = true;
       send_alarm_ab_input( true );
 #ifdef DEBUG_UPS
       CONSOLE.println("No Input voltage"); 
 #endif
     } else if (inChar[0] == '$') {
-      ups_alarm = false;
+      // ups_alarm = false;
       send_alarm_ab_input( false );
 #ifdef DEBUG_UPS
       CONSOLE.println("Return from Fail"); 
@@ -48,7 +47,6 @@ bool read_ups() {
 #endif
       }
       memset( in_str, 0, sizeof(in_str) );
-      rc = true;
       ups_cmd_sent = false;
     } else {
       if ( ups_init || ups_get_model ) {
@@ -60,7 +58,6 @@ bool read_ups() {
       }
     }
   }
-  return(rc);
 }
 
 void ups_send_cmd() {
@@ -85,9 +82,6 @@ void ups_send_cmd() {
     ups_shutdown = false;
   } else if ( ++ups_cmd_count >= ups_cmd_allcount ) {
     ups_cmd_count=0;
-//#ifdef DEBUG_UPS
-//    CONSOLE.println("ups_cmd_count cleared");
-//#endif
   }
  
   if ( ups_init ) {

@@ -26,10 +26,8 @@
 
 #define LCD_COLS 20
 #define LCD_ROWS 4
-#define MAIN_DELAY 1000
-#define SHORT_DELAY MAIN_DELAY/10
-#define MAX_ALLOWED_INPUT 127
 #define MAX_UPS_SENT_TRIES 3
+#define MAX_ALLOWED_INPUT 127
 
 #define UPS Serial
 #define CONSOLE Serial1
@@ -47,21 +45,12 @@ LiquidCrystal lcd(D1, D2, D3, D5, D6, D7);
 // Create CLI Object
 SimpleCLI cli;
 
-// Create timer object
+// Create timers object
 TickTwo timer1( ups_send_cmd, 1000);
 TickTwo timer2( lcd_fill, 4000);
 TickTwo timer3( count_uptime, 1000);
 TickTwo timer4( check_ups_status, 2500);
 TickTwo timer5( usual_report, 60000);
-
-double voltage, power;
-uint8_t input_tries=0;
-bool rc=false;
-uint8_t roll_cnt=0;
-char roller[] = { '-', '/', '|', '\\' };
-bool enable_collect_data=false;
-bool enable_cli=false;
-bool eeprom_bad=false;
 
 const char ups_cmd[] = "BCLPfQ";
 const char* ups_desc[sizeof(ups_cmd)-1] = { "Bat_volt", "Int_temp", "Input_volt", "Power_loadPr", "Bat_levelPr", "Status"};
@@ -73,15 +62,19 @@ uint8_t ups_sent_tries = 0;
 bool ups_init = true;
 bool ups_get_model = true;
 bool ups_shutdown = false;
-bool ups_alarm = false;
-bool ups_alarm_prev = false;
+// bool ups_alarm = false;
 bool ups_comm = false;
-bool ups_comm_prev = false;
 bool ups_cmd_sent = false;
 bool ups_go_2_shutdown = false;
 bool first_report = true;
+bool enable_cli = false;
+bool eeprom_bad = false;
 uint8_t screen = 0;
+uint8_t input_tries = 0;
 int httpResponseCode = 0;
+uint8_t roll_cnt = 0;
+// const char roller[] = { '-', '/', '|', '\\' };
+const char roller[] = "-/|\\";
 char in_str[128] = {0};
 char ups_model[33] = {0};
 char str_uptime[17] = "0d0h0m0s";
@@ -229,7 +222,7 @@ void loop(){
 
 void loop_usual_mode(){
 
-  rc = read_ups();
+  read_ups();
 
   timer1.update();
   timer2.update();
