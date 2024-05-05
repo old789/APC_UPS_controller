@@ -303,6 +303,8 @@ void lcd_fill(){
       lcd.setCursor(0,3);
       lcd.print( ups_desc_lcd[1] );
       lcd.print( int(round(ups_data[1])) );
+      lcd.print( "  RSSI=" );
+      lcd.print( WiFi.RSSI() );
     }
   }
 
