@@ -1,38 +1,45 @@
 bool read_ups() {
   bool rc = false;
+  char inChar[2] = {0};  // because strncpy/strncat needs \0-terminated 2nd argument
   while (UPS.available()) {
-    char inChar = UPS.read();
-    if ( inChar == '!' ) {
+    inChar[0] = UPS.read();
+    if ( inChar[0] == '!' ) {
       ups_alarm = true;
       send_alarm_ab_input( true );
 #ifdef DEBUG_UPS
       CONSOLE.println("No Input voltage"); 
 #endif
-    } else if (inChar == '$') {
+    } else if (inChar[0] == '$') {
       ups_alarm = false;
       send_alarm_ab_input( false );
 #ifdef DEBUG_UPS
       CONSOLE.println("Return from Fail"); 
 #endif
-    } else if ( inChar == '.' ){
-      inString += ",";
-    } else if ( inChar == '\n' && inString.length() > 0 ) {
+    } else if ( inChar[0] == '.' ){
+      strncat( in_str, ",", sizeof(in_str)-1 );
+     } else if ( ( inChar[0] == '\n' && strlen(in_str) > 0 ) || ( strlen(in_str) == (sizeof(in_str)-1) ) ) {
       if ( ups_init ){
 #ifdef DEBUG_UPS
-        CONSOLE.println("UPS answered after init: \"" + inString + "\"");
+        CONSOLE.print( "UPS answered after init: \"" );
+        CONSOLE.print( in_str );
+        CONSOLE.println( "\"" );
 #endif
       } else if ( ups_get_model ) {
-        inString.toCharArray(ups_model,sizeof(ups_model)-1);
+        strncpy( ups_model, in_str, sizeof(ups_model)-1 );
         ups_comm=true;
 #ifdef DEBUG_UPS
-        CONSOLE.println("UPS model: \"" + inString + "\"");
+        CONSOLE.print( "UPS model: \"" );
+        CONSOLE.print( in_str );
+        CONSOLE.println( "\"" );
 #endif
       } else if ( ups_shutdown ) {
 #ifdef DEBUG_UPS
-        CONSOLE.println("UPS answered after shutdown: \"" + inString + "\"");
+        CONSOLE.print( "UPS answered after shutdown: \"" );
+        CONSOLE.print( in_str );
+        CONSOLE.println( "\"" );
 #endif
       } else {
-        ups_data[ups_cmd_count] = inString.toFloat();
+        ups_data[ups_cmd_count] = atof( in_str );
 #ifdef DEBUG_UPS
         CONSOLE.print(ups_desc[ups_cmd_count]);
         CONSOLE.print(": ");
@@ -40,16 +47,16 @@ bool read_ups() {
         CONSOLE.println("; ");
 #endif
       }
-      inString = "";
+      memset( in_str, 0, sizeof(in_str) );
       rc = true;
       ups_cmd_sent = false;
     } else {
       if ( ups_init || ups_get_model ) {
-        if ( isPrintable(inChar) ) {
-          inString += inChar;
+        if ( isPrintable(inChar[0]) ) {
+          strncat( in_str, inChar, sizeof(in_str)-1 );
         }
-      } else if ( isdigit(inChar) ) {
-        inString += inChar;
+      } else if ( isdigit(inChar[0]) ) {
+         strncat( in_str, inChar, sizeof(in_str)-1 );
       }
     }
   }

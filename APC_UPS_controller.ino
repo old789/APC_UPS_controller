@@ -63,7 +63,6 @@ bool enable_collect_data=false;
 bool enable_cli=false;
 bool eeprom_bad=false;
 
-String inString;
 const char ups_cmd[] = "BCLPfQ";
 const char* ups_desc[sizeof(ups_cmd)-1] = { "Bat_volt", "Int_temp", "Input_volt", "Power_loadPr", "Bat_levelPr", "Status"};
 const char* ups_desc_lcd[sizeof(ups_cmd)-1] = { "Ub=", "Tint=", "Uin=", "P%=", "B%=", "Status"};
@@ -83,6 +82,7 @@ bool ups_go_2_shutdown = false;
 bool first_report = true;
 uint8_t screen = 0;
 int httpResponseCode = 0;
+char in_str[128] = {0};
 char ups_model[33] = {0};
 char str_uptime[17] = "0d0h0m0s";
 char str_post[1024];
