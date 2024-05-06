@@ -310,38 +310,48 @@ void lcd_fill(){
   screen = screen ^ 1;
 }
 
-void lcd_print_status( float status ) {
+void lcd_print_status( float ups_status ) {
   char s[21];
+  int status=int(ups_status);
   memset(s, 0, sizeof(s));
-  switch ( int(status) ) {
+
+  switch ( status ) {
     case 0: strncpy( s, "OFF line", sizeof(s)-1 ); break;
     case 8: strncpy( s, "ON line", sizeof(s)-1 ); break;
     case 10: strncpy( s, "On battery", sizeof(s)-1 ); break;
     case 50: strncpy( s, "On battery - LOW", sizeof(s)-1 ); break;
-    default: strncpy( s, "Status unknown", sizeof(s)-1 );
+    default: extended_status( status, s, sizeof(s)-1 );
   }
   lcd.print(s);
-/*  based on the code from https://github.com/networkupstools/nut/blob/master/drivers/apcsmart.c
-	if (status & 0x1)
-		status_set("CAL");		/* calibration */
-	if (status & 0x2)
-		status_set("TRIM");		/* SmartTrim */
-	if (status & 0x4)
-		status_set("BOOST");		/* SmartBoost */
-	if (status & 0x8)
-		status_set("OL");		/* on line */
-	if (status & 0x10)
-		status_set("OB");		/* on battery */
-	if (status & 0x20)
-		status_set("OVER");		/* overload */
-	if (status & 0x40)
-		status_set("LB");		/* low battery */
-	if (status & 0x80)
-		status_set("RB");		/* replace batt */
+}
 
-	if (status == 0)
-		status_set("OFF");
-/*
+void extended_status(int status, char* st, unsigned int len) {
+  //  based on the code from https://github.com/networkupstools/nut/blob/master/drivers/apcsmart.c
+
+	if (status & 0x8) {           /* on line */
+		strncpy( st, "OL", len );
+	} else if (status & 0x10) {   /* on battery */
+		strncpy( st, "OB", len );
+  }
+
+	if (status & 0x1)
+		strncat( st, " CAL", len );		/* calibration */
+
+	if (status & 0x2)
+		strncat( st, " TRIM", len );		/* SmartTrim */
+  
+	if (status & 0x4)
+		strncat( st, " BOOST", len );		/* SmartBoost */
+  
+	if (status & 0x20)
+		strncat( st, " OVER", len );		/* overload */
+  
+	if (status & 0x40)
+		strncat( st, " LB", len );		/* low battery */
+
+	if (status & 0x80)
+		strncat( st, " RB", len );		/* replace batt */
+
 }
 
 void count_uptime() {
@@ -351,13 +361,13 @@ void count_uptime() {
 }
 
 void check_ups_status() {
-  int status=int(round(status));
+  int status=int(round(ups_data[5]));
   int battery=int(round(ups_data[4]));
   
   if ( poweroff_threshold == 0 ) {
     return;
   }
-  if ( ( status != 10 ) && ( status != 50 ) ) {
+  if ( ! ( status & 0x10 ) ) {
     if ( ups_go_2_shutdown ) {   // power returned while UPS was in a grace period 
       ups_go_2_shutdown = false;
       if ( ( standalone == 0 ) && ( after_party != 0 ) ) {
@@ -372,12 +382,12 @@ void check_ups_status() {
     return;
   }
   
-  if ( ( battery >= poweroff_threshold ) && ( status != 50 ) ) {
+  if ( ( battery >= poweroff_threshold ) && ( ! ( status & 0x50 ) ) ) {
     return;
   }
   
 #ifdef DEBUG_SERIAL
-  if ( status == 50 )
+  if ( status & 0x40 )
     CONSOLE.println("Battery low");
   else
     CONSOLE.println("Battery level fall to poweroff threshold");
