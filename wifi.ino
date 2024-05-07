@@ -36,9 +36,9 @@ void send_alarm_ab_input( bool wtf ){
   send_data();
 }
 
-void send_alarm_ab_shutdown( int status ) {
+void send_alarm_ab_shutdown() {
   make_post_header();
-  if ( status == 50 ) {
+  if ( ( ups_status & 0x50 ) == 0x50 ) {
     strncat(str_post, "&alarm=\"low battery, shutdown\"", sizeof(str_post)-1);
   } else {
     strncat(str_post, "&alarm=\"battery level fall to poweroff threshold\"", sizeof(str_post)-1);
@@ -51,15 +51,18 @@ void send_alarm_ab_shutdown( int status ) {
 }
 
 void usual_report(){
-  char str_batt_volt[16];
+  char str_batt_volt[6] = {0};
+  char str_power_load[6] = {0};
+  char str_temp_intern[6] = {0};
   char str_tmp[128];
 
   make_post_header();
   if ( ups_comm ) {
     memset(str_tmp,0,sizeof(str_tmp));
-    memset(str_batt_volt,0,sizeof(str_batt_volt));
-    dtostrf(ups_data[0],1,2,str_batt_volt);
-    sprintf(str_tmp,"&data=%s,%i,%i,%i,%i,%i", str_batt_volt, int(round(ups_data[1])), int(round(ups_data[2])), int(round(ups_data[3])), int(round(ups_data[4])), int(round(ups_data[5])) );
+    dtostrf(battery_voltage,1,2,str_batt_volt);
+    dtostrf(temp_intern,1,2,str_temp_intern);
+    dtostrf(power_load,1,2,str_power_load);
+    sprintf(str_tmp,"&data=%s,%s,%i,%s,%i,%02x", str_batt_volt, str_temp_intern, line_voltage, str_power_load, battery_level, ups_status );
     strncat(str_post, str_tmp, sizeof(str_post)-1);
   } else {
     strncat(str_post, "&msg=UPS not answered", sizeof(str_post)-1);

@@ -38,6 +38,13 @@ void count_uptime();
 void usual_report();
 void check_ups_status();
 
+void conv_battery_volt( char* ch );
+void conv_battery_level( char* ch );
+void conv_temp_intern( char* ch );
+void conv_line_voltage( char* ch ); 
+void conv_power_load( char* ch );
+void conv_status( char* ch );
+
 // initialize the library by associating any needed LCD interface pin
 // with the arduino pin number it is connected to
 LiquidCrystal lcd(D1, D2, D3, D5, D6, D7);
@@ -56,9 +63,15 @@ const char ups_cmd[] = "BCLPfQ";
 const char* ups_desc[sizeof(ups_cmd)-1] = { "Bat_volt", "Int_temp", "Input_volt", "Power_loadPr", "Bat_levelPr", "Status"};
 const char* ups_desc_lcd[sizeof(ups_cmd)-1] = { "Ub=", "Tint=", "Uin=", "P%=", "B%=", "Status"};
 const uint8_t ups_cmd_allcount = sizeof(ups_cmd)-1;
-float ups_data[sizeof(ups_cmd)-1]={0};
+// float ups_data[sizeof(ups_cmd)-1]={0};
 uint8_t ups_cmd_count = 0;
 uint8_t ups_sent_tries = 0;
+float battery_voltage = 0;
+int battery_level = 0;
+float temp_intern = 0;
+int line_voltage = 0;
+float power_load = 0;
+uint16_t ups_status = 0;
 bool ups_init = true;
 bool ups_get_model = true;
 bool ups_shutdown = false;
@@ -135,6 +148,8 @@ Command cmdHpassw;
 Command cmdSave;
 Command cmdReboot;
 Command cmdHelp;
+
+void (*convr[])(char*) = { conv_battery_volt, conv_temp_intern, conv_line_voltage, conv_power_load, conv_battery_level, conv_status };
 
 void setup(){
   
@@ -259,7 +274,9 @@ void load_defaults(){
 
 void lcd_fill(){
   char stmp[128];
-  char str_batt_volt[16];
+  char str_batt_volt[6] = {0};
+  char str_power_load[6] = {0};
+  char str_temp_intern[6] = {0};
   lcd.clear();
   if ( screen == 0 ) {
 
@@ -268,21 +285,23 @@ void lcd_fill(){
     } else {
       lcd.print(ups_model);
       lcd.setCursor(0,1);
-      lcd_print_status(ups_data[5]);
+      lcd_print_status(ups_status);
       lcd.setCursor(0,2);
       memset(stmp, 0, sizeof(stmp));
-      memset(str_batt_volt,0,sizeof(str_batt_volt));
-      dtostrf(ups_data[0],1,2,str_batt_volt);
-      sprintf(stmp, "%s%i %s%sV", ups_desc_lcd[4], int(round(ups_data[4])), ups_desc_lcd[0], str_batt_volt);
+      // memset(str_batt_volt,0,sizeof(str_batt_volt));
+      dtostrf(battery_voltage,1,2,str_batt_volt);
+      dtostrf(power_load,1,1,str_power_load);
+      sprintf(stmp, "%s%i %s%sV", ups_desc_lcd[4], battery_level, ups_desc_lcd[0], str_batt_volt);
       lcd.print(stmp);
       lcd.setCursor(0,3);
       memset(stmp, 0, sizeof(stmp));
-      sprintf(stmp, "%s%iV %s%i", ups_desc_lcd[2], int(round(ups_data[2])), ups_desc_lcd[3], int(round(ups_data[3])));
+      sprintf(stmp, "%s%iV %s%s", ups_desc_lcd[2], line_voltage, ups_desc_lcd[3], str_power_load);
       lcd.print(stmp);
     }
 
   }else{
 
+    dtostrf(temp_intern,1,1,str_temp_intern);
     if ( standalone ) {
       lcd.print( "Standalone mode" );
       lcd.setCursor(0,1);
@@ -290,7 +309,7 @@ void lcd_fill(){
       lcd.print( str_uptime );
       lcd.setCursor(0,2);
       lcd.print( ups_desc_lcd[1] );
-      lcd.print( int(round(ups_data[1])) );
+      lcd.print( str_temp_intern );
     } else {
       lcd.print( "Network mode" );
       lcd.setCursor(0,1);
@@ -301,8 +320,8 @@ void lcd_fill(){
       lcd.print( httpResponseCode );
       lcd.setCursor(0,3);
       lcd.print( ups_desc_lcd[1] );
-      lcd.print( int(round(ups_data[1])) );
-      lcd.print( "  RSSI=" );
+      lcd.print( str_temp_intern );
+      lcd.print( " RSSI=" );
       lcd.print( WiFi.RSSI() );
     }
   }
@@ -310,22 +329,21 @@ void lcd_fill(){
   screen = screen ^ 1;
 }
 
-void lcd_print_status( float ups_status ) {
+void lcd_print_status( uint16_t status ) {
   char s[21];
-  int status=int(ups_status);
   memset(s, 0, sizeof(s));
 
   switch ( status ) {
     case 0: strncpy( s, "OFF line", sizeof(s)-1 ); break;
-    case 8: strncpy( s, "ON line", sizeof(s)-1 ); break;
-    case 10: strncpy( s, "On battery", sizeof(s)-1 ); break;
-    case 50: strncpy( s, "On battery - LOW", sizeof(s)-1 ); break;
+    case 0x8: strncpy( s, "ON line", sizeof(s)-1 ); break;
+    case 0x10: strncpy( s, "On battery", sizeof(s)-1 ); break;
+    case 0x50: strncpy( s, "On battery - LOW", sizeof(s)-1 ); break;
     default: extended_status( status, s, sizeof(s)-1 );
   }
   lcd.print(s);
 }
 
-void extended_status(int status, char* st, unsigned int len) {
+void extended_status(uint16_t status, char* st, unsigned int len) {
   //  based on the code from https://github.com/networkupstools/nut/blob/master/drivers/apcsmart.c
 
 	if (status & 0x8) {           /* on line */
@@ -361,13 +379,22 @@ void count_uptime() {
 }
 
 void check_ups_status() {
-  int status=int(round(ups_data[5]));
-  int battery=int(round(ups_data[4]));
   
   if ( poweroff_threshold == 0 ) {
     return;
   }
-  if ( ! ( status & 0x10 ) ) {
+#ifdef DEBUG_UPS
+      CONSOLE.println("check_ups_status  "); 
+      CONSOLE.print("status = "); 
+      CONSOLE.print(ups_status, HEX); 
+      CONSOLE.print("H "); 
+      CONSOLE.println(ups_status, BIN); 
+#endif
+
+  if ( ! ( ups_status & 0x10 ) ) {
+#ifdef DEBUG_UPS
+      CONSOLE.println("      check_ups_status  - ON line"); 
+#endif
     if ( ups_go_2_shutdown ) {   // power returned while UPS was in a grace period 
       ups_go_2_shutdown = false;
       if ( ( standalone == 0 ) && ( after_party != 0 ) ) {
@@ -377,21 +404,37 @@ void check_ups_status() {
     }
     return;
   }
-  
+
+#ifdef DEBUG_UPS
+      CONSOLE.println("         check_ups_status - on BATTERY"); 
+#endif
+
   if ( ups_go_2_shutdown ) {
     return;
   }
-  
-  if ( ( battery >= poweroff_threshold ) && ( ! ( status & 0x50 ) ) ) {
+
+  if ( ( battery_level >= poweroff_threshold ) && ( ( ups_status & 0x50 ) != 0x50 ) ) {
     return;
   }
+
+#ifdef DEBUG_UPS
+      CONSOLE.print("         check_ups_status - battery_level="); 
+      CONSOLE.print(battery_level); 
+      CONSOLE.print("   poweroff_threshold="); 
+      CONSOLE.print(poweroff_threshold); 
+      CONSOLE.print("   ups_status="); 
+      CONSOLE.println((ups_status & 0x50)); 
+#endif
+
   
-#ifdef DEBUG_SERIAL
-  if ( status & 0x40 )
+#ifdef DEBUG_UPS
+  if ( ups_status & 0x40 )
     CONSOLE.println("Battery low");
   else
     CONSOLE.println("Battery level fall to poweroff threshold");
 #endif
+
+  return;      // DEBUG!!!
 
   UPS.print("S");
   ups_cmd_sent = true;
@@ -399,7 +442,7 @@ void check_ups_status() {
   ups_go_2_shutdown = true; 
   
   if ( standalone == 0 ) {
-    send_alarm_ab_shutdown( status );
+    send_alarm_ab_shutdown();
     after_party++;
     eeprom_save();
   }

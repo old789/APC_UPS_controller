@@ -18,8 +18,6 @@ void read_ups() {
 #ifdef DEBUG_UPS
       CONSOLE.println("Return from Fail"); 
 #endif
-    } else if ( inChar[0] == '.' ){
-      strncat( in_str, ",", sizeof(in_str)-1 );
      } else if ( ( inChar[0] == '\n' && strlen(in_str) > 0 ) || ( strlen(in_str) == (sizeof(in_str)-1) ) ) {
       if ( ups_init ){
 #ifdef DEBUG_UPS
@@ -42,11 +40,11 @@ void read_ups() {
         CONSOLE.println( "\"" );
 #endif
       } else {
-        ups_data[ups_cmd_count] = atof( in_str );
+        convr[ups_cmd_count]( in_str );
 #ifdef DEBUG_UPS
         CONSOLE.print(ups_desc[ups_cmd_count]);
         CONSOLE.print(": ");
-        CONSOLE.print(ups_data[ups_cmd_count]);
+        CONSOLE.print(in_str);
         CONSOLE.println("; ");
 #endif
       }
@@ -57,7 +55,7 @@ void read_ups() {
         if ( isPrintable(inChar[0]) ) {
           strncat( in_str, inChar, sizeof(in_str)-1 );
         }
-      } else if ( isdigit(inChar[0]) ) {
+      } else if ( isdigit(inChar[0]) || inChar[0] == '.' ) {
          strncat( in_str, inChar, sizeof(in_str)-1 );
       }
     }
@@ -94,7 +92,7 @@ void ups_send_cmd() {
     CONSOLE.println("sent init command");
 #endif
   } else if ( ups_get_model ) {
-    UPS.print("\x1");   //Ctrl+A
+    UPS.print("\x1");   //Ctrl+A(
 #ifdef DEBUG_UPS
     CONSOLE.println("ask UPS model");
 #endif
@@ -109,4 +107,28 @@ void ups_send_cmd() {
 #endif
   }
   ups_cmd_sent = true;
+}
+
+void conv_battery_volt( char* ch ) {
+  battery_voltage = atof( ch );
+}
+
+void conv_battery_level( char* ch ) {
+  battery_level = int( round( atof( ch ) ) );
+}
+
+void conv_temp_intern( char* ch ) {
+  temp_intern = atof( ch );
+}
+
+void conv_line_voltage( char* ch ) {
+  line_voltage = int( round ( atof( ch ) ) );
+}
+
+void conv_power_load( char* ch ) {
+  power_load = atof ( ch );
+}
+
+void conv_status( char* ch ) {
+  ups_status = strtoul( ch, NULL, 16 );
 }
