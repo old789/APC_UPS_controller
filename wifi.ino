@@ -18,16 +18,16 @@ void make_post_header(){
   }
   
   if ( after_party != 0 ) {
-    strncat(str_post, "&alarm=\"boot after shutdown\"", sizeof(str_post)-1);
+    strncat(str_post, "&alarm=boot after shutdown", sizeof(str_post)-1);
   }
 }  
 
 void send_alarm_ab_input( bool wtf ){
   make_post_header();
   if ( wtf ) {
-    strncat(str_post, "&alarm=\"no input voltage\"", sizeof(str_post)-1);
+    strncat(str_post, "&alarm=no input voltage", sizeof(str_post)-1);
   } else {
-    strncat(str_post, "&alarm=\"return from fail state\"", sizeof(str_post)-1);
+    strncat(str_post, "&alarm=return from fail state", sizeof(str_post)-1);
   }
 
 #ifdef DBG_WIFI
@@ -39,9 +39,9 @@ void send_alarm_ab_input( bool wtf ){
 void send_alarm_ab_shutdown() {
   make_post_header();
   if ( ( ups_status & 0x50 ) == 0x50 ) {
-    strncat(str_post, "&alarm=\"low battery, shutdown\"", sizeof(str_post)-1);
+    strncat(str_post, "&alarm=low battery, shutdown", sizeof(str_post)-1);
   } else {
-    strncat(str_post, "&alarm=\"battery level fall to poweroff threshold\"", sizeof(str_post)-1);
+    strncat(str_post, "&alarm=battery level fall to poweroff threshold", sizeof(str_post)-1);
   }
 
 #ifdef DBG_WIFI

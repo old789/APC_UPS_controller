@@ -63,7 +63,6 @@ const char ups_cmd[] = "BCLPfQ";
 const char* ups_desc[sizeof(ups_cmd)-1] = { "Bat_volt", "Int_temp", "Input_volt", "Power_loadPr", "Bat_levelPr", "Status"};
 const char* ups_desc_lcd[sizeof(ups_cmd)-1] = { "Ub=", "Tint=", "Uin=", "P%=", "B%=", "Status"};
 const uint8_t ups_cmd_allcount = sizeof(ups_cmd)-1;
-// float ups_data[sizeof(ups_cmd)-1]={0};
 uint8_t ups_cmd_count = 0;
 uint8_t ups_sent_tries = 0;
 float battery_voltage = 0;
@@ -288,7 +287,6 @@ void lcd_fill(){
       lcd_print_status(ups_status);
       lcd.setCursor(0,2);
       memset(stmp, 0, sizeof(stmp));
-      // memset(str_batt_volt,0,sizeof(str_batt_volt));
       dtostrf(battery_voltage,1,2,str_batt_volt);
       dtostrf(power_load,1,1,str_power_load);
       sprintf(stmp, "%s%i %s%sV", ups_desc_lcd[4], battery_level, ups_desc_lcd[0], str_batt_volt);
