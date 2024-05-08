@@ -46,7 +46,7 @@ foreach $pair (@pairs){
     if ( $toFile ) {
       &write2log($form{'name'}.' '.$msg);
     } else {
-      &mylogger($form{'name'}, 'warn', $msg);
+      &mylogger($form{'name'}, 'warning', $msg);
     }
     $work++;
   }
