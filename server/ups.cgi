@@ -38,7 +38,7 @@ foreach $pair (@pairs){
 }
 
   if ( (!exists($form{'name'})) or ( $form{'name'} eq '' ) ) { $form{'name'}='ups'; }
-  if ( (!exists($form{'model'})) or ( $form{'model'} eq '' ) ) { $form{'model'}='"generic UPS"'; }
+  if ( (!exists($form{'model'})) or ( $form{'model'} eq '' ) ) { $form{'model'}='generic UPS'; }
   if ( (!exists($form{'uptime'})) or ( $form{'uptime'} eq '' ) ) { $form{'uptime'}='nouptime'; }
 
   if ( exists($form{'boot'}) ) {
@@ -52,7 +52,7 @@ foreach $pair (@pairs){
   }
 
   if ( exists($form{'data'}) ) {
-    $msg=$form{'model'}.' '.$form{'uptime'}.' data="'.$form{'data'}.'"';
+    $msg='"'.$form{'model'}.'" '.$form{'uptime'}.' data="'.$form{'data'}.'"';
     if ( $toFile ) {
       &write2log($form{'name'}.' '.$msg);
     } else {
@@ -62,17 +62,17 @@ foreach $pair (@pairs){
   }
 
   if ( exists($form{'msg'}) ) {
-    $msg=$form{'model'}.' message="'.$form{'msg'}.'"';
+    $msg='"'.$form{'model'}.'" message="'.$form{'msg'}.'"';
     if ( $toFile ) {
       &write2log($form{'name'}.' '.$msg);
     } else {
-      &mylogger($form{'name'}, 'warn', $msg);
+      &mylogger($form{'name'}, 'warning', $msg);
     }
     $work++;
   }
 
   if ( exists($form{'alarm'}) ) {
-    $msg=$form{'model'}.' alert="'.$form{'alarm'}.'"';
+    $msg='"'.$form{'model'}.'" alert="'.$form{'alarm'}.'"';
     if ( $toFile ) {
       &write2log($form{'name'}.' '.$msg);
     } else {
