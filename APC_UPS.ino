@@ -122,8 +122,9 @@ void conv_status( char* ch ) {
 bool is_alert( char ch ) {
   switch ( ch ) {
     case '!': // line fail
-            if  ( ! ups_alarm ) {
-              ups_alarm = true;
+            if  ( ! ( ups_status & 0x10 ) ) {
+              ups_status = ups_status | 0x10;
+              ups_status = ups_status & ( ~ 0x8 );
               send_alarm_ab_input( true );
             }
 #ifdef DEBUG_UPS
@@ -131,8 +132,9 @@ bool is_alert( char ch ) {
 #endif
             break;
     case '$': // return from line fail
-            if ( ups_alarm ) {
-              ups_alarm = false;
+            if ( ups_status & 0x10 ) {
+              ups_status = ups_status | 0x8;
+              ups_status = ups_status & ( ~ 0x10 );
               send_alarm_ab_input( false );
             }
 #ifdef DEBUG_UPS
@@ -140,16 +142,23 @@ bool is_alert( char ch ) {
 #endif
             break;
     case '%': // low battery 
+            if  ( ! ( ups_status & 0x40 ) ) {
+              ups_status = ups_status | 0x40;
+            }
 #ifdef DEBUG_UPS
             CONSOLE.println("UPS warning - LOW battery"); 
 #endif
             break;
     case '+': // return from low battery
+            if  ( ups_status & 0x40 ) {
+              ups_status = ups_status & ( ~ 0x40 );
+            }
 #ifdef DEBUG_UPS
             CONSOLE.println("UPS info - return from low battery"); 
 #endif
             break;
     case '*': // about to turn off
+            send_alarm_last_breath();
 #ifdef DEBUG_UPS
             CONSOLE.println("UPS info - about to turn off"); 
 #endif

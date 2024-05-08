@@ -50,6 +50,15 @@ void send_alarm_ab_shutdown() {
   send_data();
 }
 
+void send_alarm_last_breath() {
+  make_post_header();
+  strncat(str_post, "&alarm=stopped now", sizeof(str_post)-1);
+  send_data();
+#ifdef DBG_WIFI
+  CONSOLE.print("Alarm: \""); CONSOLE.print(str_post); CONSOLE.println("\"");
+#endif
+}
+
 void usual_report(){
   char str_batt_volt[6] = {0};
   char str_power_load[6] = {0};
