@@ -175,3 +175,73 @@ bool is_alert( char ch ) {
   }
   return( true );
 }
+
+void check_ups_status() {
+  
+  if ( poweroff_threshold == 0 ) {
+    return;
+  }
+#ifdef DEBUG_UPS
+      CONSOLE.println("check_ups_status  "); 
+      CONSOLE.print("status = "); 
+      CONSOLE.print(ups_status, HEX); 
+      CONSOLE.print("H "); 
+      CONSOLE.println(ups_status, BIN); 
+#endif
+
+  if ( ! ( ups_status & 0x10 ) ) {
+#ifdef DEBUG_UPS
+      CONSOLE.println("      check_ups_status  - ON line"); 
+#endif
+    if ( ups_go_2_shutdown ) {   // power returned while UPS was in a grace period 
+      ups_go_2_shutdown = false;
+      if ( ( standalone == 0 ) && ( after_party != 0 ) ) {
+        after_party=0;
+        eeprom_save();
+      }
+    }
+    return;
+  }
+
+#ifdef DEBUG_UPS
+      CONSOLE.println("         check_ups_status - on BATTERY"); 
+#endif
+
+  if ( ups_go_2_shutdown ) {
+    return;
+  }
+
+  if ( ( battery_level >= poweroff_threshold ) && ( ( ups_status & 0x50 ) != 0x50 ) ) {
+    return;
+  }
+
+#ifdef DEBUG_UPS
+      CONSOLE.print("         check_ups_status - battery_level="); 
+      CONSOLE.print(battery_level); 
+      CONSOLE.print("   poweroff_threshold="); 
+      CONSOLE.print(poweroff_threshold); 
+      CONSOLE.print("   ups_status="); 
+      CONSOLE.println((ups_status & 0x50)); 
+#endif
+
+  
+#ifdef DEBUG_UPS
+  if ( ups_status & 0x40 )
+    CONSOLE.println("Battery low");
+  else
+    CONSOLE.println("Battery level fall to poweroff threshold");
+#endif
+
+  return;      // DEBUG!!!
+
+  UPS.print("S");
+  ups_cmd_sent = true;
+  ups_shutdown = true;
+  ups_go_2_shutdown = true; 
+  
+  if ( standalone == 0 ) {
+    send_alarm_ab_shutdown();
+    after_party++;
+    eeprom_save();
+  }
+}
