@@ -2,23 +2,9 @@ void read_ups() {
   char inChar[2] = {0};  // because strncpy/strncat needs \0-terminated 2nd argument
   while (UPS.available()) {
     inChar[0] = UPS.read();
-    if ( inChar[0] == '!' ) {
-      if  ( ! ups_alarm ) {
-        ups_alarm = true;
-        send_alarm_ab_input( true );
-      }
-#ifdef DEBUG_UPS
-      CONSOLE.println("No Input voltage"); 
-#endif
-    } else if (inChar[0] == '$') {
-      if ( ups_alarm ) {
-        ups_alarm = false;
-        send_alarm_ab_input( false );
-      }
-#ifdef DEBUG_UPS
-      CONSOLE.println("Return from Fail"); 
-#endif
-     } else if ( ( inChar[0] == '\n' && strlen(in_str) > 0 ) || ( strlen(in_str) == (sizeof(in_str)-1) ) ) {
+    if ( is_alert( inChar[0] ) ) {
+      continue;
+    } else if ( ( inChar[0] == '\n' && strlen(in_str) > 0 ) || ( strlen(in_str) >= (sizeof(in_str)-1) ) ) {
       if ( ups_init ){
 #ifdef DEBUG_UPS
         CONSOLE.print( "UPS answered after init: \"" );
@@ -131,4 +117,52 @@ void conv_power_load( char* ch ) {
 
 void conv_status( char* ch ) {
   ups_status = strtoul( ch, NULL, 16 );
+}
+
+bool is_alert( char ch ) {
+  switch ( ch ) {
+    case '!': // line fail
+            if  ( ! ups_alarm ) {
+              ups_alarm = true;
+              send_alarm_ab_input( true );
+            }
+#ifdef DEBUG_UPS
+            CONSOLE.println("No Input voltage"); 
+#endif
+            break;
+    case '$': // return from line fail
+            if ( ups_alarm ) {
+              ups_alarm = false;
+              send_alarm_ab_input( false );
+            }
+#ifdef DEBUG_UPS
+            CONSOLE.println("Return from Fail"); 
+#endif
+            break;
+    case '%': // low battery 
+#ifdef DEBUG_UPS
+            CONSOLE.println("UPS warning - LOW battery"); 
+#endif
+            break;
+    case '+': // return from low battery
+#ifdef DEBUG_UPS
+            CONSOLE.println("UPS info - return from low battery"); 
+#endif
+            break;
+    case '*': // about to turn off
+#ifdef DEBUG_UPS
+            CONSOLE.println("UPS info - about to turn off"); 
+#endif
+            break;
+    // not implemented yet
+    case '?': // abnormal condition
+    case '=': // return from abnormal condition
+    case '#': // replace battery
+    case '&': // check alarm register for fault
+    case '|': // variable change in EEPROM
+            break;
+    default:
+            return( false );
+  }
+  return( true );
 }
