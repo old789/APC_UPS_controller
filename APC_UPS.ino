@@ -37,7 +37,7 @@ void read_ups() {
       memset( in_str, 0, sizeof(in_str) );
       ups_cmd_sent = false;
     } else {
-      if ( ups_init || ups_get_model ) {
+      if ( ups_init || ups_get_model || ups_shutdown ) {
         if ( isPrintable(inChar[0]) ) {
           strncat( in_str, inChar, sizeof(in_str)-1 );
         }
@@ -71,7 +71,7 @@ void ups_send_cmd() {
   } else if ( ++ups_cmd_count >= ups_cmd_allcount ) {
     ups_cmd_count=0;
   }
- 
+
   if ( ups_init ) {
     UPS.print("Y");
 #ifdef DEBUG_UPS
@@ -81,6 +81,11 @@ void ups_send_cmd() {
     UPS.print("\x1");   //Ctrl+A(
 #ifdef DEBUG_UPS
     CONSOLE.println("ask UPS model");
+#endif
+  } else if ( ups_shutdown ) {
+    UPS.print("S");
+#ifdef DEBUG_UPS
+    CONSOLE.println("sent shutdown command");
 #endif
   } else {
     UPS.print(ups_cmd[ups_cmd_count]);
@@ -128,7 +133,7 @@ bool is_alert( char ch ) {
               send_alarm_ab_input( true );
             }
 #ifdef DEBUG_UPS
-            CONSOLE.println("No Input voltage"); 
+            CONSOLE.println("No Input voltage");
 #endif
             break;
     case '$': // return from line fail
@@ -138,15 +143,15 @@ bool is_alert( char ch ) {
               send_alarm_ab_input( false );
             }
 #ifdef DEBUG_UPS
-            CONSOLE.println("Return from Fail"); 
+            CONSOLE.println("Return from Fail");
 #endif
             break;
-    case '%': // low battery 
+    case '%': // low battery
             if  ( ! ( ups_status & 0x40 ) ) {
               ups_status = ups_status | 0x40;
             }
 #ifdef DEBUG_UPS
-            CONSOLE.println("UPS warning - LOW battery"); 
+            CONSOLE.println("UPS warning - LOW battery");
 #endif
             break;
     case '+': // return from low battery
@@ -154,13 +159,13 @@ bool is_alert( char ch ) {
               ups_status = ups_status & ( ~ 0x40 );
             }
 #ifdef DEBUG_UPS
-            CONSOLE.println("UPS info - return from low battery"); 
+            CONSOLE.println("UPS info - return from low battery");
 #endif
             break;
     case '*': // about to turn off
             send_alarm_last_breath();
 #ifdef DEBUG_UPS
-            CONSOLE.println("UPS info - about to turn off"); 
+            CONSOLE.println("UPS info - about to turn off");
 #endif
             break;
     // not implemented yet
@@ -177,23 +182,23 @@ bool is_alert( char ch ) {
 }
 
 void check_ups_status() {
-  
+
   if ( poweroff_threshold == 0 ) {
     return;
   }
 #ifdef DEBUG_UPS
-      CONSOLE.println("check_ups_status  "); 
-      CONSOLE.print("status = "); 
-      CONSOLE.print(ups_status, HEX); 
-      CONSOLE.print("H "); 
-      CONSOLE.println(ups_status, BIN); 
+      CONSOLE.println("check_ups_status  ");
+      CONSOLE.print("status = ");
+      CONSOLE.print(ups_status, HEX);
+      CONSOLE.print("H ");
+      CONSOLE.println(ups_status, BIN);
 #endif
 
   if ( ! ( ups_status & 0x10 ) ) {
 #ifdef DEBUG_UPS
-      CONSOLE.println("      check_ups_status  - ON line"); 
+      CONSOLE.println("      check_ups_status  - ON line");
 #endif
-    if ( ups_go_2_shutdown ) {   // power returned while UPS was in a grace period 
+    if ( ups_go_2_shutdown ) {   // power returned while UPS was in a grace period
       ups_go_2_shutdown = false;
       if ( ( standalone == 0 ) && ( after_party != 0 ) ) {
         after_party=0;
@@ -204,7 +209,7 @@ void check_ups_status() {
   }
 
 #ifdef DEBUG_UPS
-      CONSOLE.println("         check_ups_status - on BATTERY"); 
+      CONSOLE.println("         check_ups_status - on BATTERY");
 #endif
 
   if ( ups_go_2_shutdown ) {
@@ -216,15 +221,15 @@ void check_ups_status() {
   }
 
 #ifdef DEBUG_UPS
-      CONSOLE.print("         check_ups_status - battery_level="); 
-      CONSOLE.print(battery_level); 
-      CONSOLE.print("   poweroff_threshold="); 
-      CONSOLE.print(poweroff_threshold); 
-      CONSOLE.print("   ups_status="); 
-      CONSOLE.println((ups_status & 0x50)); 
+      CONSOLE.print("         check_ups_status - battery_level=");
+      CONSOLE.print(battery_level);
+      CONSOLE.print("   poweroff_threshold=");
+      CONSOLE.print(poweroff_threshold);
+      CONSOLE.print("   ups_status=");
+      CONSOLE.println((ups_status & 0x50));
 #endif
 
-  
+
 #ifdef DEBUG_UPS
   if ( ups_status & 0x40 )
     CONSOLE.println("Battery low");
@@ -234,11 +239,9 @@ void check_ups_status() {
 
   return;      // DEBUG!!!
 
-  UPS.print("S");
-  ups_cmd_sent = true;
   ups_shutdown = true;
-  ups_go_2_shutdown = true; 
-  
+  ups_go_2_shutdown = true;
+
   if ( standalone == 0 ) {
     send_alarm_ab_shutdown();
     after_party++;
