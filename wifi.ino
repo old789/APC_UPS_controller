@@ -36,12 +36,16 @@ void send_alarm_ab_input( bool wtf ){
   send_data();
 }
 
-void send_alarm_ab_shutdown() {
+void send_alarm_ab_shutdown( bool wtf ) {
   make_post_header();
-  if ( ( ups_status & 0x50 ) == 0x50 ) {
-    strncat(str_post, "&alarm=low battery, shutdown", sizeof(str_post)-1);
+  if ( wtf ) {
+    if ( ( ups_status & 0x50 ) == 0x50 ) {
+      strncat(str_post, "&alarm=low battery, shutdown", sizeof(str_post)-1);
+     } else {
+      strncat(str_post, "&alarm=battery level fall to poweroff threshold", sizeof(str_post)-1);
+    }
   } else {
-    strncat(str_post, "&alarm=battery level fall to poweroff threshold", sizeof(str_post)-1);
+    strncat(str_post, "&alarm=shutdown aborted", sizeof(str_post)-1);
   }
 
 #ifdef DBG_WIFI

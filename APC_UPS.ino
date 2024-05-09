@@ -25,6 +25,25 @@ void read_ups() {
         CONSOLE.print( in_str );
         CONSOLE.println( "\"" );
 #endif
+        if ( standalone == 0 ) {
+          send_alarm_ab_shutdown( true );
+          after_party++;
+          eeprom_save();
+        }
+      } else if ( ups_abort_shutdown ) {
+#ifdef DEBUG_UPS
+        CONSOLE.print( "UPS answered after abort shutdown: \"" );
+        CONSOLE.print( in_str );
+        CONSOLE.println( "\"" );
+#endif
+        ups_go_2_shutdown = false;
+        if ( standalone == 0 ) {
+          send_alarm_ab_shutdown( false );
+          if ( after_party != 0 ) {
+            after_party=0;
+            eeprom_save();
+          }
+        }
       } else {
         convr[ups_cmd_count]( in_str );
 #ifdef DEBUG_UPS
@@ -49,6 +68,7 @@ void read_ups() {
 }
 
 void ups_send_cmd() {
+  char och;
   if ( ups_cmd_sent ) {
     if ( ++ups_sent_tries <= MAX_UPS_SENT_TRIES ) {
       return;
@@ -68,27 +88,34 @@ void ups_send_cmd() {
     ups_get_model = false;
   } else if ( ups_shutdown ) {
     ups_shutdown = false;
+  } else if ( ups_abort_shutdown ) {
+    ups_abort_shutdown = false;
   } else if ( ++ups_cmd_count >= ups_cmd_allcount ) {
     ups_cmd_count=0;
   }
 
   if ( ups_init ) {
-    UPS.print("Y");
+    och = 'Y';
 #ifdef DEBUG_UPS
     CONSOLE.println("sent init command");
 #endif
   } else if ( ups_get_model ) {
-    UPS.print("\x1");   //Ctrl+A(
+    och = '\x1';  // Ctrl+A
 #ifdef DEBUG_UPS
     CONSOLE.println("ask UPS model");
 #endif
   } else if ( ups_shutdown ) {
-    UPS.print("S");
+    och = 'S';
 #ifdef DEBUG_UPS
     CONSOLE.println("sent shutdown command");
 #endif
+  } else if ( ups_abort_shutdown ) {
+    och = '\x7f';
+#ifdef DEBUG_UPS
+    CONSOLE.println("sent abort shutdown command");
+#endif
   } else {
-    UPS.print(ups_cmd[ups_cmd_count]);
+    och = ups_cmd[ups_cmd_count];
 #ifdef DEBUG_UPS
     CONSOLE.print("sent command N");
     CONSOLE.print(ups_cmd_count);
@@ -97,6 +124,7 @@ void ups_send_cmd() {
     CONSOLE.println("\"");
 #endif
   }
+  UPS.print( och );
   ups_cmd_sent = true;
 }
 
@@ -199,11 +227,12 @@ void check_ups_status() {
       CONSOLE.println("      check_ups_status  - ON line");
 #endif
     if ( ups_go_2_shutdown ) {   // power returned while UPS was in a grace period
-      ups_go_2_shutdown = false;
+     /* ups_go_2_shutdown = false;
       if ( ( standalone == 0 ) && ( after_party != 0 ) ) {
         after_party=0;
         eeprom_save();
-      }
+      } */
+      ups_abort_shutdown = true;
     }
     return;
   }
@@ -242,9 +271,4 @@ void check_ups_status() {
   ups_shutdown = true;
   ups_go_2_shutdown = true;
 
-  if ( standalone == 0 ) {
-    send_alarm_ab_shutdown();
-    after_party++;
-    eeprom_save();
-  }
 }
