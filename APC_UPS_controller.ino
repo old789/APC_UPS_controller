@@ -74,7 +74,9 @@ uint16_t ups_status = 0;
 bool ups_init = true;
 bool ups_get_model = true;
 bool ups_shutdown = false;
+bool ups_shutdown_sent = false;
 bool ups_abort_shutdown = false;
+bool ups_abort_shutdown_sent = false;
 bool ups_comm = false;
 bool ups_cmd_sent = false;
 bool ups_go_2_shutdown = false;
@@ -219,6 +221,8 @@ void setup(){
       CONSOLE.println("Enter to standalone mode");
     }
 #endif
+
+poweroff_threshold=75;    // DEBUG !!!
 
     UPS.print("Y");
     ups_cmd_sent = true;

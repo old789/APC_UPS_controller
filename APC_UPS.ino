@@ -19,23 +19,27 @@ void read_ups() {
         CONSOLE.print( in_str );
         CONSOLE.println( "\"" );
 #endif
-      } else if ( ups_shutdown ) {
+      } else if ( ups_shutdown_sent ) {
 #ifdef DEBUG_UPS
         CONSOLE.print( "UPS answered after shutdown: \"" );
         CONSOLE.print( in_str );
         CONSOLE.println( "\"" );
 #endif
+        ups_shutdown = false;
+        ups_shutdown_sent = false;
         if ( standalone == 0 ) {
           send_alarm_ab_shutdown( true );
           after_party++;
           eeprom_save();
         }
-      } else if ( ups_abort_shutdown ) {
+      } else if ( ups_abort_shutdown_sent ) {
 #ifdef DEBUG_UPS
         CONSOLE.print( "UPS answered after abort shutdown: \"" );
         CONSOLE.print( in_str );
         CONSOLE.println( "\"" );
 #endif
+        ups_abort_shutdown = false;
+        ups_abort_shutdown_sent = false;
         ups_go_2_shutdown = false;
         if ( standalone == 0 ) {
           send_alarm_ab_shutdown( false );
@@ -56,7 +60,7 @@ void read_ups() {
       memset( in_str, 0, sizeof(in_str) );
       ups_cmd_sent = false;
     } else {
-      if ( ups_init || ups_get_model || ups_shutdown ) {
+      if ( ups_init || ups_get_model || ups_shutdown_sent || ups_abort_shutdown_sent ) {
         if ( isPrintable(inChar[0]) ) {
           strncat( in_str, inChar, sizeof(in_str)-1 );
         }
@@ -75,6 +79,10 @@ void ups_send_cmd() {
     } else {
       ups_init=true;
       ups_get_model=true;
+      ups_shutdown = false;
+      ups_shutdown_sent = false;
+      ups_abort_shutdown = false;
+      ups_abort_shutdown_sent = false;
       ups_sent_tries=0;
       memset(ups_model, 0, sizeof(ups_model));
       ups_comm=false;
@@ -86,12 +94,10 @@ void ups_send_cmd() {
     ups_init = false;
   } else if ( ups_get_model ) {
     ups_get_model = false;
-  } else if ( ups_shutdown ) {
-    ups_shutdown = false;
-  } else if ( ups_abort_shutdown ) {
-    ups_abort_shutdown = false;
-  } else if ( ++ups_cmd_count >= ups_cmd_allcount ) {
-    ups_cmd_count=0;
+  } else if ( ! ( ups_shutdown || ups_abort_shutdown) ) {
+      if ( ++ups_cmd_count >= ups_cmd_allcount ) {
+        ups_cmd_count=0;
+      }
   }
 
   if ( ups_init ) {
@@ -104,13 +110,15 @@ void ups_send_cmd() {
 #ifdef DEBUG_UPS
     CONSOLE.println("ask UPS model");
 #endif
-  } else if ( ups_shutdown ) {
+  } else if ( ups_shutdown ) {  // it is special command
     och = 'S';
+    ups_shutdown_sent = true;
 #ifdef DEBUG_UPS
     CONSOLE.println("sent shutdown command");
 #endif
-  } else if ( ups_abort_shutdown ) {
+  } else if ( ups_abort_shutdown ) {  // it is special command
     och = '\x7f';
+    ups_abort_shutdown_sent = true;
 #ifdef DEBUG_UPS
     CONSOLE.println("sent abort shutdown command");
 #endif
@@ -209,9 +217,11 @@ bool is_alert( char ch ) {
   return( true );
 }
 
+int debug_count=0;  // DEBUG !!!
+
 void check_ups_status() {
 
-  if ( poweroff_threshold == 0 ) {
+  if ( ( poweroff_threshold == 0 ) || ( ! ups_comm ) || ( ! ( ups_status & 0x18 ) ) ) {
     return;
   }
 #ifdef DEBUG_UPS
@@ -227,11 +237,6 @@ void check_ups_status() {
       CONSOLE.println("      check_ups_status  - ON line");
 #endif
     if ( ups_go_2_shutdown ) {   // power returned while UPS was in a grace period
-     /* ups_go_2_shutdown = false;
-      if ( ( standalone == 0 ) && ( after_party != 0 ) ) {
-        after_party=0;
-        eeprom_save();
-      } */
       ups_abort_shutdown = true;
     }
     return;
@@ -245,9 +250,11 @@ void check_ups_status() {
     return;
   }
 
-  if ( ( battery_level >= poweroff_threshold ) && ( ( ups_status & 0x50 ) != 0x50 ) ) {
-    return;
-  }
+/* DEBUG */
+if ( ++debug_count > 10 ) {
+  poweroff_threshold = battery_level;
+}
+/* DEBUG !!! */ 
 
 #ifdef DEBUG_UPS
       CONSOLE.print("         check_ups_status - battery_level=");
@@ -258,6 +265,9 @@ void check_ups_status() {
       CONSOLE.println((ups_status & 0x50));
 #endif
 
+  if ( ( battery_level > poweroff_threshold ) && ( ( ups_status & 0x50 ) != 0x50 ) ) {
+    return;
+  }
 
 #ifdef DEBUG_UPS
   if ( ups_status & 0x40 )
@@ -265,8 +275,6 @@ void check_ups_status() {
   else
     CONSOLE.println("Battery level fall to poweroff threshold");
 #endif
-
-  return;      // DEBUG!!!
 
   ups_shutdown = true;
   ups_go_2_shutdown = true;
