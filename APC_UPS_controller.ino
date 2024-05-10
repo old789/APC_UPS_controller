@@ -96,6 +96,10 @@ char in_str[128] = {0};
 char ups_model[33] = {0};
 char str_uptime[17] = "0d0h0m0s";
 char str_post[1024];
+#if not defined ( DEBUG_SERIAL )
+unsigned int ledPin = D4;
+unsigned int ledOn = LOW;
+#endif
 
 // Some default values
 uint8_t def_input_delay = 3;
@@ -165,6 +169,9 @@ void setup(){
   CONSOLE.begin(115200);
   delay(50);
   CONSOLE.println(".\nStart debugging serial");
+#else
+  pinMode(ledPin, OUTPUT);
+  digitalWrite( ledPin, ledOn );
 #endif
 
   EEPROM.begin(2048);
@@ -386,4 +393,8 @@ void count_uptime() {
   uptime::calculateUptime();
   memset(str_uptime, 0, sizeof(str_uptime));
   sprintf( str_uptime, "%ud%uh%um%us", uptime::getDays(), uptime::getHours(), uptime::getMinutes(), uptime::getSeconds() );
+#if not defined DEBUG_SERIAL
+  ledOn ^= 0x1;
+  digitalWrite( ledPin, ledOn );
+#endif
 }
