@@ -226,8 +226,6 @@ void setup(){
     }
 #endif
 
-poweroff_threshold=75;    // DEBUG !!!
-
     UPS.print("Y");
     ups_cmd_sent = true;
 #ifdef  DEBUG_SERIAL
@@ -358,14 +356,14 @@ void lcd_print_status( uint16_t status ) {
 void extended_status(uint16_t status, char* st, unsigned int len) {
   //  based on the code from https://github.com/networkupstools/nut/blob/master/drivers/apcsmart.c
 
-	if (status & 0x8) {           /* on line */
+	if (status & 0x8) {               /* on line */
 		strncpy( st, "OL", len );
-	} else if (status & 0x10) {   /* on battery */
+	} else if (status & 0x10) {       /* on battery */
 		strncpy( st, "OB", len );
   }
 
 	if (status & 0x1)
-		strncat( st, " CAL", len );		/* calibration */
+		strncat( st, " CAL", len );		  /* calibration */
 
 	if (status & 0x2)
 		strncat( st, " TRIM", len );		/* SmartTrim */
@@ -377,10 +375,10 @@ void extended_status(uint16_t status, char* st, unsigned int len) {
 		strncat( st, " OVER", len );		/* overload */
 
 	if (status & 0x40)
-		strncat( st, " LB", len );		/* low battery */
+		strncat( st, " LB", len );		  /* low battery */
 
 	if (status & 0x80)
-		strncat( st, " RB", len );		/* replace batt */
+		strncat( st, " RB", len );		  /* replace batt */
 
 }
 

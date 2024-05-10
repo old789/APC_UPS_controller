@@ -127,11 +127,7 @@ void ups_send_cmd() {
     }
     och = ups_cmd[ups_cmd_count];
 #ifdef DEBUG_UPS
-    CONSOLE.print("sent command N");
-    CONSOLE.print(ups_cmd_count);
-    CONSOLE.print(" \"");
-    CONSOLE.print(ups_cmd[ups_cmd_count]);
-    CONSOLE.println("\"");
+    CONSOLE.print("sent command N"); CONSOLE.print(ups_cmd_count); CONSOLE.print(" \""); CONSOLE.print(ups_cmd[ups_cmd_count]); CONSOLE.println("\"");
 #endif
   }
   UPS.print( och );
@@ -220,19 +216,13 @@ bool is_alert( char ch ) {
   return( true );
 }
 
-int debug_count=0;  // DEBUG !!!
-
 void check_ups_status() {
 
   if ( ( poweroff_threshold == 0 ) || ( ! ups_comm ) || ( ! ( ups_status & 0x18 ) ) ) {
     return;
   }
 #ifdef DEBUG_UPS
-      CONSOLE.println("check_ups_status  ");
-      CONSOLE.print("status = ");
-      CONSOLE.print(ups_status, HEX);
-      CONSOLE.print("H ");
-      CONSOLE.println(ups_status, BIN);
+      CONSOLE.println("check_ups_status  "); CONSOLE.print("status = "); CONSOLE.println(ups_status, HEX);
 #endif
 
   if ( ! ( ups_status & 0x10 ) ) {
@@ -253,19 +243,9 @@ void check_ups_status() {
     return;
   }
 
-/* DEBUG */
-if ( ++debug_count > 10 ) {
-  poweroff_threshold = battery_level;
-}
-/* DEBUG !!! */
-
 #ifdef DEBUG_UPS
-      CONSOLE.print("         check_ups_status - battery_level=");
-      CONSOLE.print(battery_level);
-      CONSOLE.print("   poweroff_threshold=");
-      CONSOLE.print(poweroff_threshold);
-      CONSOLE.print("   ups_status=");
-      CONSOLE.println((ups_status & 0x50));
+      CONSOLE.print("        check_ups_status - battery_level="); CONSOLE.print(battery_level);
+      CONSOLE.print("; poweroff_threshold="); CONSOLE.println(poweroff_threshold);
 #endif
 
   if ( ( battery_level > poweroff_threshold ) && ( ( ups_status & 0x50 ) != 0x50 ) ) {

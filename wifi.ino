@@ -152,9 +152,7 @@ void send_data(){
 
 void wifi_init(){
 #ifdef DBG_WIFI
-  CONSOLE.print("Connecting to ");
-  CONSOLE.print(ssid);
-  CONSOLE.println(" ...");
+  CONSOLE.print("Connecting to "); CONSOLE.print(ssid); CONSOLE.println(" ...");
 #endif
 
   WiFi.mode(WIFI_STA);
@@ -176,9 +174,7 @@ void wifi_init(){
       if ( ++wifi_tries < 3 ) {
         eeprom_save();  // remembering tries between reboots
 #ifdef DBG_WIFI
-        CONSOLE.print("Try ");
-        CONSOLE.print(wifi_tries);
-        CONSOLE.println(" connect to WiFi");
+        CONSOLE.print("Try "); CONSOLE.print(wifi_tries); CONSOLE.println(" connect to WiFi");
 #endif
         lcd.setCursor(0,1); lcd.print("WiFi not connected  ");
         for ( i=150; i > 0; i-- ) {
