@@ -136,6 +136,7 @@ void ups_send_cmd() {
   }
   UPS.print( och );
   ups_cmd_sent = true;
+  just_boot = false;
 }
 
 void conv_battery_volt( char* ch ) {

@@ -63,7 +63,7 @@ const char ups_cmd[] = "BCLPfQ";
 const char* ups_desc[sizeof(ups_cmd)-1] = { "Bat_volt", "Int_temp", "Input_volt", "Power_loadPr", "Bat_levelPr", "Status"};
 const char* ups_desc_lcd[sizeof(ups_cmd)-1] = { "Ub=", "Tint=", "Uin=", "P%=", "B%=", "Status"};
 const uint8_t ups_cmd_allcount = sizeof(ups_cmd)-1;
-uint8_t ups_cmd_count = 0;
+uint8_t ups_cmd_count = sizeof(ups_cmd)-3;  // actually a value is a position before of a command "Q" ( "status" );
 uint8_t ups_sent_tries = 0;
 float battery_voltage = 0;
 int battery_level = 0;
@@ -84,6 +84,7 @@ bool ups_comm = false;
 bool ups_cmd_sent = false;
 bool ups_go_2_shutdown = false;
 bool first_report = true;
+bool just_boot = true;
 bool enable_cli = false;
 bool eeprom_bad = false;
 uint8_t screen = 0;
@@ -287,7 +288,9 @@ void lcd_fill(){
   if ( screen == 0 ) {
 
     if ( ! ups_comm ) {
-      if ( ups_incorrect_answer ) {
+      if ( just_boot ) {
+        lcd.print("Wait for answer");
+      } else if ( ups_incorrect_answer ) {
         lcd.print("Incorrect answer");
       } else {
         lcd.print("UPS not answered");
