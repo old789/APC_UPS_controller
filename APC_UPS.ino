@@ -246,7 +246,7 @@ void check_ups_status() {
   }
 
 #ifdef DEBUG_UPS
-      CONSOLE.println("         check_ups_status - on BATTERY");
+      CONSOLE.println("      check_ups_status - on BATTERY");
 #endif
 
   if ( ups_go_2_shutdown ) {

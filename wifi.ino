@@ -164,7 +164,7 @@ void wifi_init(){
 
   uint16_t i = 0;
   while (WiFi.status() != WL_CONNECTED) { // Wait for the Wi-Fi to connect
-    lcd.setCursor(19,1);
+    lcd.setCursor( LCD_COLS-1, 1 );
     lcd.write(roller[roll_cnt++]);
     if ( roll_cnt >= sizeof(roller)-1 ) roll_cnt=0;
     delay(100);
@@ -213,4 +213,3 @@ void wifi_init(){
   CONSOLE.print("RSSI: ");CONSOLE.println(WiFi.RSSI());
 #endif
 }
-
