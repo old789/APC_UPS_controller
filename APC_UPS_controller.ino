@@ -41,7 +41,7 @@ void check_ups_status();
 void conv_battery_volt( char* ch );
 void conv_battery_level( char* ch );
 void conv_temp_intern( char* ch );
-void conv_line_voltage( char* ch ); 
+void conv_line_voltage( char* ch );
 void conv_power_load( char* ch );
 void conv_status( char* ch );
 
@@ -72,7 +72,10 @@ int line_voltage = 0;
 float power_load = 0;
 uint16_t ups_status = 0;
 bool ups_init = true;
+bool ups_init_sent = false;
+bool ups_incorrect_answer = false;
 bool ups_get_model = true;
+bool ups_get_model_sent = false;
 bool ups_shutdown = false;
 bool ups_shutdown_sent = false;
 bool ups_abort_shutdown = false;
@@ -128,7 +131,7 @@ uint8_t after_party = 0;
 #define PT_HUSER            PT_AUTH + sizeof(http_auth)
 #define PT_HPASSW           PT_HUSER + sizeof(http_user)
 #define PT_WIFI_TRIES       PT_HPASSW + sizeof(http_passw)
-#define PT_AFTER_PARTY      PT_WIFI_TRIES + sizeof(wifi_tries) 
+#define PT_AFTER_PARTY      PT_WIFI_TRIES + sizeof(wifi_tries)
 #define PT_CRC              PT_AFTER_PARTY + sizeof(after_party)
 #define SIZE_EEPROM         PT_AFTER_PARTY + sizeof(after_party) - 1 // PT_CRC d'not count
 
@@ -153,7 +156,7 @@ Command cmdHelp;
 void (*convr[])(char*) = { conv_battery_volt, conv_temp_intern, conv_line_voltage, conv_power_load, conv_battery_level, conv_status };
 
 void setup(){
-  
+
   lcd.begin(20, 4);
   lcd.print("Booting...");
 
@@ -162,7 +165,7 @@ void setup(){
   delay(50);
   CONSOLE.println(".\nStart debugging serial");
 #endif
-  
+
   EEPROM.begin(2048);
 #ifdef DEBUG_SERIAL
   CONSOLE.println("Init EEPROM");
@@ -181,7 +184,7 @@ void setup(){
   if ( eeprom_bad ) {
     load_defaults();
   }
-  
+
 #ifdef DEBUG_SERIAL
   CONSOLE.println("Waiting for user input");
 #endif
@@ -284,7 +287,11 @@ void lcd_fill(){
   if ( screen == 0 ) {
 
     if ( ! ups_comm ) {
-      lcd.print("UPS not answered");
+      if ( ups_incorrect_answer {
+        lcd.print("Incorrect answer");
+      } else {
+        lcd.print("UPS not answered");
+      }
     } else {
       lcd.print(ups_model);
       lcd.setCursor(0,1);
@@ -359,13 +366,13 @@ void extended_status(uint16_t status, char* st, unsigned int len) {
 
 	if (status & 0x2)
 		strncat( st, " TRIM", len );		/* SmartTrim */
-  
+
 	if (status & 0x4)
 		strncat( st, " BOOST", len );		/* SmartBoost */
-  
+
 	if (status & 0x20)
 		strncat( st, " OVER", len );		/* overload */
-  
+
 	if (status & 0x40)
 		strncat( st, " LB", len );		/* low battery */
 

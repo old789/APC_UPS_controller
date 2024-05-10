@@ -5,62 +5,9 @@ void read_ups() {
     if ( is_alert( inChar[0] ) ) {
       continue;
     } else if ( ( inChar[0] == '\n' && strlen(in_str) > 0 ) || ( strlen(in_str) >= (sizeof(in_str)-1) ) ) {
-      if ( ups_init ){
-#ifdef DEBUG_UPS
-        CONSOLE.print( "UPS answered after init: \"" );
-        CONSOLE.print( in_str );
-        CONSOLE.println( "\"" );
-#endif
-      } else if ( ups_get_model ) {
-        strncpy( ups_model, in_str, sizeof(ups_model)-1 );
-        ups_comm=true;
-#ifdef DEBUG_UPS
-        CONSOLE.print( "UPS model: \"" );
-        CONSOLE.print( in_str );
-        CONSOLE.println( "\"" );
-#endif
-      } else if ( ups_shutdown_sent ) {
-#ifdef DEBUG_UPS
-        CONSOLE.print( "UPS answered after shutdown: \"" );
-        CONSOLE.print( in_str );
-        CONSOLE.println( "\"" );
-#endif
-        ups_shutdown = false;
-        ups_shutdown_sent = false;
-        if ( standalone == 0 ) {
-          send_alarm_ab_shutdown( true );
-          after_party++;
-          eeprom_save();
-        }
-      } else if ( ups_abort_shutdown_sent ) {
-#ifdef DEBUG_UPS
-        CONSOLE.print( "UPS answered after abort shutdown: \"" );
-        CONSOLE.print( in_str );
-        CONSOLE.println( "\"" );
-#endif
-        ups_abort_shutdown = false;
-        ups_abort_shutdown_sent = false;
-        ups_go_2_shutdown = false;
-        if ( standalone == 0 ) {
-          send_alarm_ab_shutdown( false );
-          if ( after_party != 0 ) {
-            after_party=0;
-            eeprom_save();
-          }
-        }
-      } else {
-        convr[ups_cmd_count]( in_str );
-#ifdef DEBUG_UPS
-        CONSOLE.print(ups_desc[ups_cmd_count]);
-        CONSOLE.print(": ");
-        CONSOLE.print(in_str);
-        CONSOLE.println("; ");
-#endif
-      }
-      memset( in_str, 0, sizeof(in_str) );
-      ups_cmd_sent = false;
+      handle_answer_from_ups();
     } else {
-      if ( ups_init || ups_get_model || ups_shutdown_sent || ups_abort_shutdown_sent ) {
+      if ( ups_init_sent || ups_get_model_sent || ups_shutdown_sent || ups_abort_shutdown_sent ) {
         if ( isPrintable(inChar[0]) ) {
           strncat( in_str, inChar, sizeof(in_str)-1 );
         }
@@ -71,42 +18,94 @@ void read_ups() {
   }
 }
 
+void handle_answer_from_ups() {
+  if ( ups_init_sent ){
+    if ( strcmp( in_str, "SM" ) == 0 ) {
+      ups_init = false;
+      ups_comm = true;
+      ups_incorrect_answer = false;
+    } else {
+      ups_incorrect_answer = true;
+    }
+    ups_init_sent = false;
+#ifdef DEBUG_UPS
+    CONSOLE.print( "UPS answered after init: \"" ); CONSOLE.print( in_str );CONSOLE.println( "\"" );
+#endif
+  } else if ( ups_get_model_sent ) {
+    strncpy( ups_model, in_str, sizeof(ups_model)-1 );
+    ups_get_model = false;
+    ups_get_model_sent = false;
+#ifdef DEBUG_UPS
+    CONSOLE.print( "UPS model: \"" ); CONSOLE.print( in_str ); CONSOLE.println( "\"" );
+#endif
+  } else if ( ups_shutdown_sent ) {
+#ifdef DEBUG_UPS
+    CONSOLE.print( "UPS answered after shutdown: \"" ); CONSOLE.print( in_str ); CONSOLE.println( "\"" );
+#endif
+    ups_shutdown = false;
+    ups_shutdown_sent = false;
+    if ( standalone == 0 ) {
+      send_alarm_ab_shutdown( true );
+      after_party++;
+      eeprom_save();
+    }
+  } else if ( ups_abort_shutdown_sent ) {
+#ifdef DEBUG_UPS
+    CONSOLE.print( "UPS answered after abort shutdown: \"" ); CONSOLE.print( in_str ); CONSOLE.println( "\"" );
+#endif
+    ups_abort_shutdown = false;
+    ups_abort_shutdown_sent = false;
+    ups_go_2_shutdown = false;
+    if ( standalone == 0 ) {
+      send_alarm_ab_shutdown( false );
+      if ( after_party != 0 ) {
+        after_party=0;
+        eeprom_save();
+      }
+    }
+  } else {
+    convr[ups_cmd_count]( in_str );
+#ifdef DEBUG_UPS
+    CONSOLE.print(ups_desc[ups_cmd_count]); CONSOLE.print(": "); CONSOLE.print(in_str); CONSOLE.println("; ");
+#endif
+  }
+  memset( in_str, 0, sizeof(in_str) );
+  ups_cmd_sent = false;
+}
+
 void ups_send_cmd() {
   char och;
   if ( ups_cmd_sent ) {
     if ( ++ups_sent_tries <= MAX_UPS_SENT_TRIES ) {
       return;
     } else {
-      ups_init=true;
-      ups_get_model=true;
+      ups_init = true;
+      ups_init_sent = false;
+      ups_get_model = true;
+      ups_get_model_sent = false;
       ups_shutdown = false;
       ups_shutdown_sent = false;
       ups_abort_shutdown = false;
       ups_abort_shutdown_sent = false;
       ups_sent_tries=0;
+      ups_incorrect_answer = false;
       memset(ups_model, 0, sizeof(ups_model));
       ups_comm=false;
  #ifdef DEBUG_UPS
       CONSOLE.println("no answer from UPS");
 #endif
     }
-  } else if ( ups_init ) {
-    ups_init = false;
-  } else if ( ups_get_model ) {
-    ups_get_model = false;
-  } else if ( ! ( ups_shutdown || ups_abort_shutdown) ) {
-      if ( ++ups_cmd_count >= ups_cmd_allcount ) {
-        ups_cmd_count=0;
-      }
   }
 
   if ( ups_init ) {
     och = 'Y';
+    ups_init_sent = true;
 #ifdef DEBUG_UPS
     CONSOLE.println("sent init command");
 #endif
   } else if ( ups_get_model ) {
     och = '\x1';  // Ctrl+A
+    ups_get_model_sent = true;
 #ifdef DEBUG_UPS
     CONSOLE.println("ask UPS model");
 #endif
@@ -123,6 +122,9 @@ void ups_send_cmd() {
     CONSOLE.println("sent abort shutdown command");
 #endif
   } else {
+    if ( ++ups_cmd_count >= ups_cmd_allcount ) {
+      ups_cmd_count=0;
+    }
     och = ups_cmd[ups_cmd_count];
 #ifdef DEBUG_UPS
     CONSOLE.print("sent command N");
@@ -254,7 +256,7 @@ void check_ups_status() {
 if ( ++debug_count > 10 ) {
   poweroff_threshold = battery_level;
 }
-/* DEBUG !!! */ 
+/* DEBUG !!! */
 
 #ifdef DEBUG_UPS
       CONSOLE.print("         check_ups_status - battery_level=");
