@@ -77,7 +77,11 @@ void usual_report(){
     sprintf(str_tmp,"&data=%s,%s,%i,%s,%i,%02x", str_batt_volt, str_temp_intern, line_voltage, str_power_load, battery_level, ups_status );
     strncat(str_post, str_tmp, sizeof(str_post)-1);
   } else {
-    strncat(str_post, "&msg=UPS not answered", sizeof(str_post)-1);
+    if ( ups_incorrect_answer ) {
+      strncat(str_post, "&msg=UPS sent an incorrect answer after init", sizeof(str_post)-1);
+    } else {
+      strncat(str_post, "&msg=UPS not answered", sizeof(str_post)-1);
+    }
   }
 #ifdef DBG_WIFI
   CONSOLE.print("Prepared data: \""); CONSOLE.print(str_post); CONSOLE.println("\"");

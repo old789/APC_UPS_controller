@@ -287,7 +287,7 @@ void lcd_fill(){
   if ( screen == 0 ) {
 
     if ( ! ups_comm ) {
-      if ( ups_incorrect_answer {
+      if ( ups_incorrect_answer ) {
         lcd.print("Incorrect answer");
       } else {
         lcd.print("UPS not answered");
