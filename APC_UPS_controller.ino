@@ -85,6 +85,7 @@ bool ups_cmd_sent = false;
 bool ups_go_2_shutdown = false;
 bool first_report = true;
 bool just_boot = true;
+uint16_t wait4init = 40;
 bool enable_cli = false;
 bool eeprom_bad = false;
 uint8_t screen = 0;

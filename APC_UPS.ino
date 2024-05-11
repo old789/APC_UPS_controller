@@ -221,6 +221,15 @@ void check_ups_status() {
   if ( ( poweroff_threshold == 0 ) || ( ! ups_comm ) || ( ! ( ups_status & 0x18 ) ) ) {
     return;
   }
+  
+  if ( wait4init > 0 ) {  // delay after boot - UPS can do selftest
+    wait4init--;
+#ifdef DEBUG_UPS
+      CONSOLE.println("      check_ups_status  - delay after boot");
+#endif
+    return;
+  }
+  
 #ifdef DEBUG_UPS
       CONSOLE.println("check_ups_status  "); CONSOLE.print("status = "); CONSOLE.println(ups_status, HEX);
 #endif
