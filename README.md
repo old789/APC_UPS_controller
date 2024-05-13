@@ -43,7 +43,7 @@ Data are transmitted in the POST request.
 | model | UPS model which UPS reported |
 | boot | always "1", this is 1st  message after boot |
 | alarm | Emergency messages like a main power failure |
-| msg | Infomational messages |
+| msg | Informational messages |
 | data | Comma separated lists of main parameters: battery voltage (float), temperature (float), line voltage (int), power load (float), battery level (int), UPS status (hex) |
 
 ### Device design
@@ -56,4 +56,5 @@ I used version Node MCU with CH340G. For cheapening and simplicity I just desold
 | 3 | 2 |
 | 5 | 9 |
 
+![schematic diagram](https://github.com/old789/APC_UPS_controller/blob/main/schematic.jpg)
 
