@@ -20,7 +20,7 @@ void SetSimpleCli(){
   cmdPassw.setDescription(" Set WiFi password");
 
   cmdHost = cli.addSingleArgCmd("host");
-  cmdHost.setDescription(" Set destination IP address");
+  cmdHost.setDescription(" Set destination host ( hostname or IPv4 )");
 
   cmdPort = cli.addSingleArgCmd("port");
   cmdPort.setDescription(" Set destination port");
@@ -93,7 +93,7 @@ void  loop_cli_mode(){
           Serial.println("Argument must be between 0 and 99");
         }else{
           poweroff_threshold = i;
-          if ( i == 0 ) 
+          if ( i == 0 )
             Serial.println("Battery threshold disabled");
           else
             Serial.println("Battery threshold set to " + c.getArg(0).getValue() + "%");
@@ -108,7 +108,7 @@ void  loop_cli_mode(){
           Serial.println("Argument must be 0 or 1");
         }else{
           standalone = (uint8_t)i;
-          if ( standalone == 1 ) 
+          if ( standalone == 1 )
             Serial.println("Standalone mode enabled");
           else
             Serial.println("Standalone mode disabled");
@@ -170,7 +170,7 @@ void  loop_cli_mode(){
           Serial.println("Argument must be 0 or 1");
         }else{
           http_auth = (uint8_t)i;
-          if ( http_auth == 1 ) 
+          if ( http_auth == 1 )
             Serial.println("HTTP(S) authorization enabled");
           else
             Serial.println("HTTP(S) authorization disabled");
@@ -199,11 +199,11 @@ void  loop_cli_mode(){
       Serial.println("Configuration saved to EEPROM");
     } else if (c == cmdShow) {
       Serial.println("Input delay " + String(input_delay) + "s");
-      if ( poweroff_threshold == 0 ) 
+      if ( poweroff_threshold == 0 )
         Serial.println("Battery threshold disabled");
       else
         Serial.println("Battery threshold " + String(poweroff_threshold) + "%");
-      if ( standalone == 1 ) 
+      if ( standalone == 1 )
         Serial.println("Standalone mode enabled");
       else
         Serial.println("Standalone mode disabled");
@@ -213,7 +213,7 @@ void  loop_cli_mode(){
       Serial.print("Host = \"");Serial.print(host);Serial.println("\"");
       Serial.print("Port = \"");Serial.print(port);Serial.println("\"");
       Serial.print("URI = \"");Serial.print(uri);Serial.println("\"");
-      if ( http_auth > 0 ) 
+      if ( http_auth > 0 )
         Serial.println("HTTP(S) authorization enabled");
       else
         Serial.println("HTTP(S) authorization disabled");
