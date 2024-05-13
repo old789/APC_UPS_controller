@@ -1,7 +1,7 @@
 # APC_UPS_controller
 Monitor an APC UPS over WiFi
 
-###Features:
+### Features:
 - Based on a Node MCU.
 - Compatible with the [APC Smart UPS protocol](https://kirbah.github.io/apc-ups/Smart-protocol/)
 - Display main parameters of the UPS on the LCD screen.
