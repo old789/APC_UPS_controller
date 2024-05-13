@@ -46,4 +46,14 @@ Data are transmitted in the POST request.
 | msg | Infomational messages |
 | data | Comma separated lists of main parameters: battery voltage (float), temperature (float), line voltage (int), power load (float), battery level (int), UPS status (hex) |
 
+### Device design
+
+I used version Node MCU with CH340G. For cheapening and simplicity I just desolder CH340G and connected a RS232-to-TTL converter instead. That was a RS232 interface module from an old and uncommon device. A LCD screen was "POWERTIP PC2004-A". To connect to UPS I made a cable with that pinout:
+
+| Controller / DB9 male | UPS / DB9 male |
+| --- | --- |
+| 2 | 1 |
+| 3 | 2 |
+| 5 | 9 |
+
 
