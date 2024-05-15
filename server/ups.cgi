@@ -4,9 +4,12 @@ use strict;
 use POSIX;
 use Sys::Syslog qw(:DEFAULT setlogsock);
 use Fcntl ':flock';
+use RRDs;
 
 my $log_file_name='/home/user/ups_stat/ups_stat_'.POSIX::strftime("%d_%m_%Y",localtime()).'.log';
 my $toFile=1;  # 0 = syslog, 1 = file
+my $toRRD=0;   # 1 - write data to .rrd file, 0 - not
+my $rrd_dir='/var/db/rrd/';
 
 my $name='';
 my $value='';
@@ -59,6 +62,9 @@ foreach $pair (@pairs){
       &mylogger($form{'name'}, 'info', $msg);
     }
     $work++;
+    if ( $toRRD ){
+      &write2rrd($form{'name'}, $form{'data'});
+    }
   }
 
   if ( exists($form{'msg'}) ) {
@@ -127,4 +133,37 @@ my $wr_str=POSIX::strftime("%d-%m-%Y %H:%M:%S",localtime()).' '.$msg;
   }
   &mylogger('can\'t open file "'.$log_file_name.'": "'.$!.'"');
   &byebye("I/O error\n");
+}
+
+sub write2rrd{
+my $name=shift;
+my $data=shift;
+my $rrdfile='';
+
+  if ( $name !~ /^[\d\w_\-\.]+$/ ) {
+    &mylogger('incorrect name, RRD d\'not updated');
+    return;
+  }
+
+  $rrdfile=$rrd_dir.$name.'.rrd';
+  unless ( -f $rrdfile ) {
+    &mylogger('file '.$rrdfile.' not found');
+    return;
+  }
+
+  if ( $data !~ /^([\d\.]+)\,([\d\.]+)\,(\d+)\,([\d\.]+)\,(\d+)\,.+$/ ) {
+    &mylogger('incorrect data, RRD d\'not updated');
+    return;
+  }
+  my $ut=time();
+  my $b_v=$1;
+  my $t=$2;
+  my $v=$3;
+  my $p=$4;
+  my $b_s=$5;
+  RRDs::update($rrdfile,$ut.":".$v.":".$p.":".$t.":".$b_s.":".$b_v);
+  my $err=RRDs::error;
+  if ( $err ) {
+    &mylogger('ERROR while updating '.$rrdfile.': '.$err);
+  }
 }
