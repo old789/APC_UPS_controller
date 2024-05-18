@@ -9,7 +9,9 @@ use RRDs;
 my $log_file_name='/home/user/ups_stat/ups_stat_'.POSIX::strftime("%d_%m_%Y",localtime()).'.log';
 my $toFile=1;  # 0 = syslog, 1 = file
 my $toRRD=0;   # 1 - write data to .rrd file, 0 - not
+my $sendAlarm=0; # 1 - send, 0 - not
 my $rrd_dir='/var/db/rrd/';
+my $sender='send_telegram_message';
 
 my $name='';
 my $value='';
@@ -85,6 +87,9 @@ foreach $pair (@pairs){
       &mylogger($form{'name'}, 'emerg', $msg);
     }
     $work++;
+    if ( $sendAlarm ) {
+      &send_alarm($form{'name'}.' '.$msg);
+    }
   }
 
   if ( $work == 0 ) {
@@ -165,5 +170,20 @@ my $rrdfile='';
   my $err=RRDs::error;
   if ( $err ) {
     &mylogger('ERROR while updating '.$rrdfile.': '.$err);
+  }
+}
+
+sub send_alarm{
+my $msg=shift;
+
+  unless ( -x $sender ){
+    &mylogger('Program '.$sender.' not exists or non-executable');
+  }
+  open(TX,"|".$sender) || return;
+  print TX $msg;
+  close(TX);
+  my $exitcode=$?>>8;
+  if ($exitcode) {
+    &mylogger('Program '.$sender.' finished with the exitcode "'.$exitcode.'"');
   }
 }
