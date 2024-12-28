@@ -65,7 +65,7 @@ foreach $pair (@pairs){
     }
     $work++;
     if ( $toRRD ){
-      &write2rrd($form{'name'}, $form{'data'});
+      &write2rrd($form{'name'}, $form{'model'}, $form{'data'});
     }
   }
 
@@ -142,34 +142,63 @@ my $wr_str=POSIX::strftime("%d-%m-%Y %H:%M:%S",localtime()).' '.$msg;
 
 sub write2rrd{
 my $name=shift;
+my $model=shift;
 my $data=shift;
 my $rrdfile='';
+my $rrdcmd='';
+
+  if ( ( $model eq 'generic UPS' ) or ( $model eq 'power sensor' ) ) {
+    return;
+  }
 
   if ( $name !~ /^[\d\w_\-\.]+$/ ) {
     &mylogger('incorrect name, RRD d\'not updated');
     return;
   }
 
-  $rrdfile=$rrd_dir.$name.'.rrd';
+  $rrdfile=$rrd_dir.lc($name).'.rrd';
   unless ( -f $rrdfile ) {
     &mylogger('file '.$rrdfile.' not found');
     return;
   }
 
-  if ( $data !~ /^([\d\.]+)\,([\d\.]+)\,(\d+)\,([\d\.]+)\,(\d+)\,.+$/ ) {
-    &mylogger('incorrect data, RRD d\'not updated');
-    return;
-  }
   my $ut=time();
-  my $b_v=$1;
-  my $t=$2;
-  my $v=$3;
-  my $p=$4;
-  my $b_s=$5;
-  RRDs::update($rrdfile,$ut.":".$v.":".$p.":".$t.":".$b_s.":".$b_v);
-  my $err=RRDs::error;
-  if ( $err ) {
-    &mylogger('ERROR while updating '.$rrdfile.': '.$err);
+  if ( $model =~ /^Smart\-UPS\s+\d+.*$/ ) {
+    if ( $data !~ /^([\d\.]+)\,([\d\.]+)\,(\d+)\,([\d\.]+)\,(\d+)\,.+$/ ) {
+      &mylogger('incorrect data from device '.$name.', RRD d\'not updated');
+      return;
+    }
+
+    my $b_v=$1;
+    my $t=$2;
+    my $v=$3;
+    my $p=$4;
+    my $b_s=$5;
+    $rrdcmd=$ut.":".$v.":".$p.":".$t.":".$b_s.":".$b_v;
+  }
+  elsif ( $model eq 'UPS-1228' ) {
+    # powerOk,batteryOk,192.168.13.194,-45,22.6,13.58
+    if ( $data !~ /^\S+\,\S+\,[\d\.]+\,\S+,([\d\.]+)\,([\d\.]+)$/ ) {
+      &mylogger('incorrect data from device '.$name.', RRD d\'not updated');
+      return;
+    }
+    my $t=$1;
+    my $b_v=$2;
+    $rrdcmd=$ut.":".$b_v.":".$t;
+  }
+  else{
+     &mylogger('Unknown model '.$model);
+     return;
+  }
+
+  if ( $rrdcmd eq '' ) {
+    &mylogger('Empty RRD parameters for device '.$name.', do nothing');
+  } else {
+    RRDs::update($rrdfile,$rrdcmd);
+    my $err=RRDs::error;
+    if ( $err ) {
+      &mylogger('ERROR while updating '.$rrdfile.': '.$err);
+    }
   }
 }
 
